@@ -1,0 +1,30 @@
+name: Keep Supabase Project Active
+
+on:
+  schedule:
+    # Exécution tous les 4 jours à 08h00 UTC pour éviter la mise en pause automatique du plan gratuit
+    - cron: '0 8 */4 * *'
+  workflow_dispatch:
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase public REST endpoint
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Supabase variables not configured yet — skipping ping cleanly."
+            exit 0
+          fi
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/projects?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          echo "Supabase keep-alive status: HTTP ${HTTP_CODE}"
+          if [ "$HTTP_CODE" -ge 500 ]; then
+            echo "Supabase returned server error ${HTTP_CODE}"
+            exit 1
+          fi

@@ -1,0 +1,352 @@
+{
+  "hero-showreel-poster": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/hero-showreel-poster-480w.webp",
+        "avif": "media/images/hero-showreel-poster-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/hero-showreel-poster-960w.webp",
+        "avif": "media/images/hero-showreel-poster-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/hero-showreel-poster-1600w.webp",
+        "avif": "media/images/hero-showreel-poster-1600w.avif"
+      }
+    ]
+  },
+  "pub-nexora-poster": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/pub-nexora-poster-480w.webp",
+        "avif": "media/images/pub-nexora-poster-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/pub-nexora-poster-960w.webp",
+        "avif": "media/images/pub-nexora-poster-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/pub-nexora-poster-1600w.webp",
+        "avif": "media/images/pub-nexora-poster-1600w.avif"
+      }
+    ]
+  },
+  "nexora-still-01": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-01-480w.webp",
+        "avif": "media/images/nexora-still-01-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-01-960w.webp",
+        "avif": "media/images/nexora-still-01-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-01-1600w.webp",
+        "avif": "media/images/nexora-still-01-1600w.avif"
+      }
+    ]
+  },
+  "nexora-still-02": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-02-480w.webp",
+        "avif": "media/images/nexora-still-02-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-02-960w.webp",
+        "avif": "media/images/nexora-still-02-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-02-1600w.webp",
+        "avif": "media/images/nexora-still-02-1600w.avif"
+      }
+    ]
+  },
+  "nexora-still-03": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-03-480w.webp",
+        "avif": "media/images/nexora-still-03-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-03-960w.webp",
+        "avif": "media/images/nexora-still-03-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-03-1600w.webp",
+        "avif": "media/images/nexora-still-03-1600w.avif"
+      }
+    ]
+  },
+  "nexora-still-04": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-04-480w.webp",
+        "avif": "media/images/nexora-still-04-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-04-960w.webp",
+        "avif": "media/images/nexora-still-04-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-04-1600w.webp",
+        "avif": "media/images/nexora-still-04-1600w.avif"
+      }
+    ]
+  },
+  "nexora-packshot": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-packshot-480w.webp",
+        "avif": "media/images/nexora-packshot-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-packshot-960w.webp",
+        "avif": "media/images/nexora-packshot-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-packshot-1600w.webp",
+        "avif": "media/images/nexora-packshot-1600w.avif"
+      }
+    ]
+  },
+  "nexora-logo": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-logo-480w.webp",
+        "avif": "media/images/nexora-logo-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-logo-960w.webp",
+        "avif": "media/images/nexora-logo-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-logo-1600w.webp",
+        "avif": "media/images/nexora-logo-1600w.avif"
+      }
+    ]
+  },
+  "dc2026-instagram": {
+    "width": 1080,
+    "height": 1350,
+    "aspectRatio": 0.8,
+    "variants": [
+      {
+        "width": 480,
+        "height": 600,
+        "webp": "media/images/dc2026-instagram-480w.webp",
+        "avif": "media/images/dc2026-instagram-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 1200,
+        "webp": "media/images/dc2026-instagram-960w.webp",
+        "avif": "media/images/dc2026-instagram-960w.avif"
+      },
+      {
+        "width": 1080,
+        "height": 1350,
+        "webp": "media/images/dc2026-instagram-1080w.webp",
+        "avif": "media/images/dc2026-instagram-1080w.avif"
+      }
+    ]
+  },
+  "dc2026-a3": {
+    "width": 3508,
+    "height": 4961,
+    "aspectRatio": 0.7071,
+    "variants": [
+      {
+        "width": 480,
+        "height": 679,
+        "webp": "media/images/dc2026-a3-480w.webp",
+        "avif": "media/images/dc2026-a3-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 1358,
+        "webp": "media/images/dc2026-a3-960w.webp",
+        "avif": "media/images/dc2026-a3-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 2263,
+        "webp": "media/images/dc2026-a3-1600w.webp",
+        "avif": "media/images/dc2026-a3-1600w.avif"
+      }
+    ]
+  },
+  "dc2026-logo": {
+    "width": 2120,
+    "height": 720,
+    "aspectRatio": 2.9444,
+    "variants": [
+      {
+        "width": 480,
+        "height": 163,
+        "webp": "media/images/dc2026-logo-480w.webp",
+        "avif": "media/images/dc2026-logo-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 326,
+        "webp": "media/images/dc2026-logo-960w.webp",
+        "avif": "media/images/dc2026-logo-960w.avif"
+      },
+      {
+        "width": 1400,
+        "height": 475,
+        "webp": "media/images/dc2026-logo-1400w.webp",
+        "avif": "media/images/dc2026-logo-1400w.avif"
+      }
+    ]
+  },
+  "louange-carre": {
+    "width": 1080,
+    "height": 1080,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/louange-carre-480w.webp",
+        "avif": "media/images/louange-carre-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/louange-carre-960w.webp",
+        "avif": "media/images/louange-carre-960w.avif"
+      },
+      {
+        "width": 1080,
+        "height": 1080,
+        "webp": "media/images/louange-carre-1080w.webp",
+        "avif": "media/images/louange-carre-1080w.avif"
+      }
+    ]
+  },
+  "louange-whatsapp": {
+    "width": 1080,
+    "height": 1920,
+    "aspectRatio": 0.5625,
+    "variants": [
+      {
+        "width": 480,
+        "height": 853,
+        "webp": "media/images/louange-whatsapp-480w.webp",
+        "avif": "media/images/louange-whatsapp-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 1707,
+        "webp": "media/images/louange-whatsapp-960w.webp",
+        "avif": "media/images/louange-whatsapp-960w.avif"
+      },
+      {
+        "width": 1080,
+        "height": 1920,
+        "webp": "media/images/louange-whatsapp-1080w.webp",
+        "avif": "media/images/louange-whatsapp-1080w.avif"
+      }
+    ]
+  },
+  "draft-talents-quiz": {
+    "width": 2480,
+    "height": 3508,
+    "aspectRatio": 0.707,
+    "variants": [
+      {
+        "width": 480,
+        "height": 679,
+        "webp": "media/images/draft-talents-quiz-480w.webp",
+        "avif": "media/images/draft-talents-quiz-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 1358,
+        "webp": "media/images/draft-talents-quiz-960w.webp",
+        "avif": "media/images/draft-talents-quiz-960w.avif"
+      },
+      {
+        "width": 1400,
+        "height": 1980,
+        "webp": "media/images/draft-talents-quiz-1400w.webp",
+        "avif": "media/images/draft-talents-quiz-1400w.avif"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "kairos-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "KAIROS STUDIO — Turning Ideas Into Experiences. Portfolio créatif et numérique de Joseph Kouamé.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && node scripts/prerender.mjs",
+    "build:spa": "tsc -b && vite build",
+    "preview": "vite preview",
+    "media:images": "node scripts/process-media.mjs",
+    "media:videos": "python scripts/process-videos.py",
+    "snapshot:sync": "node scripts/sync-snapshot.mjs",
+    "test:smoke": "node scripts/verify-build.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "gsap": "^3.12.7",
+    "lenis": "^1.2.3",
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.9",
+    "@types/node": "^22.13.5",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^4.0.9",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  }
+}
