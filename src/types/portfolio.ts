@@ -1,6 +1,8 @@
 export type Locale = 'fr' | 'en';
 
-export type ThemeMode = 'editorial' | 'nocturne';
+export type PaletteId = 'braise' | 'indigo' | 'encre';
+
+export type FontPairId = 'syne' | 'bricolage' | 'fraunces';
 
 export type ProjectCategory =
   | 'graphic-design'
@@ -30,9 +32,7 @@ export interface MediaManifestEntry {
 export interface ProjectGalleryItem {
   id: string;
   type: 'image' | 'video';
-  /** Identifiant dans media-manifest.json (pour images locales pré-optimisées) */
   assetId?: string;
-  /** URL directe (pour médias uploadés dans Supabase Storage) */
   url?: string;
   webmUrl?: string;
   posterAssetId?: string;
@@ -52,6 +52,10 @@ export interface Project {
   featured: boolean;
   sort_order: number;
 
+  /** Marqueurs de gestion Phase 2 */
+  origine_non_verifiee?: boolean;
+  demo?: boolean;
+
   title_fr: string;
   title_en: string;
   subtitle_fr: string;
@@ -70,14 +74,12 @@ export interface Project {
   deliverables_en: string[];
   external_url?: string | null;
 
-  /** Couverture locale (assetId) ou distante (cover_image_url) */
   cover_asset_id?: string | null;
   cover_image_url: string;
   cover_image_alt_fr: string;
   cover_image_alt_en: string;
   cover_aspect: CoverAspect;
 
-  /** Vidéo optionnelle (locale ou Supabase Storage) */
   video_url?: string | null;
   video_webm_url?: string | null;
   video_poster_asset_id?: string | null;

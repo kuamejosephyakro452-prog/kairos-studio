@@ -1,15 +1,31 @@
 # PROGRESS — KAIROS STUDIO
 
-Suivi autonome de la conception, du développement, du traitement des médias, des tests et du déploiement du portfolio **KAIROS STUDIO**.
+Suivi complet du projet **KAIROS STUDIO** (Phase 1 Infrastructure + Phase 2 Refonte Totale Frontend).
 
-## État des phases
-- [x] **Phase 1 — Audit de l'environnement** : Node.js v24.21.0, npm 11.19.0, Git 2.56.0 (`kuamejosephyakro452-prog`), Python 3.14 + Pillow 13.0 + FFmpeg v9.0.2 (`imageio_ffmpeg`), Chrome/Edge détectés. Dossiers sources vérifiés en lecture seule (`D:\MON STUDIO`, `D:\MON_STUDIO_VIDEO`).
-- [x] **Phase 2 — Inventaire & décisions éditoriales** : Inventaire complet dans `inventaire.md` (3 projets originaux publiés, 2 brouillons en admin, doublons et ressources tierces écartés).
-- [x] **Phase 3 — Direction artistique, médias & schéma Supabase** : Vidéos compressées MP4/WebM (`hero-showreel` 1,08 Mo, `pub-nexora-tech` 12,26 Mo), images responsives AVIF+WebP (`480w/960w/1600w`), projet Supabase dédié `kairos-studio` (`lpenmdantrekfhyehbyp`, région `eu-west-1`) provisionné sans toucher aux autres projets du compte.
-- [x] **Phase 4 — Site public bilingue (FR/EN)** : Routes `/fr`, `/en`, fiches projets dédiées, pages légales minimales, thème Clair/Sombre, 5 domaines mis en scène, galerie filtrable horizontale desktop / grille mobile, fondateur JK, savoir-faire, formulaire de contact connecté à Supabase avec repli WhatsApp.
-- [x] **Phase 5 — Administration privée & sécurité Supabase** : Inscriptions publiques désactivées (`disable_signup: true`), compte administrateur unique (`kuamejosephyakro452@gmail.com`) lié dans `public.admin_users`, `supabase/schema.sql` & `supabase/seed.sql` appliqués, 10/10 tests RLS et CRUD vérifiés par requêtes réelles, support complet de réinitialisation de mot de passe dans `/admin` (`noindex`, hors sitemap).
-- [x] **Phase 6 — Animations, WebGL discret, SEO, prérendu & revue visuelle** : Préchargeur JK, GSAP/ScrollTrigger + Lenis, shader WebGL GLSL prémultiplié, 12 routes publiques prérendues + `404.html` + `sitemap.xml`, revue visuelle desktop/mobile + QA E2E complet.
-- [x] **Phase 7 — Déploiement GitHub Pages & vérifications publiques réelles** : Dépôt public `kuamejosephyakro452-prog/kairos-studio`, variables publiques `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` configurées dans GitHub Actions, déploiement continu GitHub Pages + tâche `keep-supabase-alive.yml` validés en production.
+## Phase 1 — Fondations, Backend Supabase & Déploiement Initial (Conservés)
+- [x] **Audit environnement & lecture seule** : `D:\MON STUDIO` et `D:\MON_STUDIO_VIDEO` inventoriés (`inventaire.md`), originaux strictement intacts.
+- [x] **Supabase dédié `kairos-studio` (`lpenmdantrekfhyehbyp`)** : `disable_signup: true`, compte admin unique (`kuamejosephyakro452@gmail.com`) dans `public.admin_users`, RLS complet, 10/10 tests sécurité & CRUD validés.
+- [x] **CI/CD GitHub Pages & maintien en vie** : dépôt public `kuamejosephyakro452-prog/kairos-studio`, déploiement continu `.github/workflows/deploy.yml`, ping périodique `.github/workflows/keep-supabase-alive.yml`.
+
+## Phase 2 — Refonte Totale du Frontend (Niveau Awwwards)
+- [x] **Audit critique de la V1** : captures Avant enregistrées dans `docs/avant-apres/avant_*.png` et diagnostic franc rédigé dans `AUDIT_FRONTEND.md`.
+- [x] **Concept directeur & nettoyage sémantique** : `CONCEPT.md` (« Du Signal Brut à l’Expérience Vivante ») ; retrait intégral de toute référence à la signification du nom de marque et de l’ancienne esthétique beige/or.
+- [x] **Catalogue élargi & médias de démonstration** :
+  - 5 nouvelles réalisations sélectionnées & recadrées depuis `D:\MON STUDIO\04_TEMPLATES` (`origine_non_verifiee = true`), converties en AVIF/WebP responsives.
+  - 3 vidéos libres de droits Pexels compressées MP4/WebM 720p dans `public/media/demo/` (`demo = true`), documentées dans `DEMO_ASSETS.md`.
+- [x] **Design system chromatique (3 palettes) & typographies auto-hébergées** :
+  - 3 palettes tokens CSS (`Braise` par défaut, `Indigo & Corail`, `Encre & Vermillon`) + sélecteur temporaire discret (`?palette=braise|indigo|encre`).
+  - Polices variables auto-hébergées (`Syne`, `Space Grotesk`, `Fraunces`, `JetBrains Mono`) — zéro dépendance Google Fonts.
+- [x] **Expérience interactive complète** :
+  - Préchargeur monogramme **JK** + compteur `000→100`.
+  - Hero plein écran : shader WebGL liquide réactif au curseur, monogramme JK 3D interactif, showreel muet et message client à conversion directe.
+  - Manifeste à illumination mot-à-mot, Scène interactive des 5 disciplines à ambiance chromatique dynamique.
+  - Galerie 3 modes (**Galerie horizontale épinglée**, **Index avec traînée d’image au curseur**, **Canevas libre glissable « Explorer »**).
+  - Fiches projets structurées plein écran + bloc « Projet suivant », Footer au wordmark géant réactif lettre par lettre, 404 personnalisée, WhatsApp flottant toujours accessible.
+- [x] **Administration enrichie (`/admin`)** : filtres *Origine non vérifiée* et *Démo*, badges dédiés, cases à cocher dans l’éditeur, bouton **« Supprimer tout le contenu de démonstration »** en 1 clic.
+- [x] **Migration & synchronisation Supabase Phase 2** : colonnes `origine_non_verifiee` & `demo` + 11 projets publiés (5 catégories) + 2 brouillons synchronisés en direct sur `lpenmdantrekfhyehbyp`.
+- [x] **Cycles visuels 1, 2, 3 & 4** : comparaisons palettes/polices, captures `docs/avant-apres/avant_*.png` & `apres_*.png`, audit interactif complet et correctifs validés (galerie horizontale sticky sans `pin:true`, suppression du `transform` persistant sur `.page-transition`, bascule instantanée des 3 palettes, mobile 390 px sans débordement).
+- [x] **Déploiement production Phase 2** : rebuild final, tests statiques (`test:smoke`), push sur GitHub (`main`), déploiement GitHub Pages et vérifications réelles en ligne.
 
 ## Journal chronologique
-- **2026-11-20** : Développement complet, revue visuelle, déploiement initial GitHub Pages, puis provisionnement complet du projet Supabase `kairos-studio`, application RLS/seed, validation 10/10 sécurité & CRUD, liaison GitHub Actions et vérification publique finale.
+- **2026-11-20** : Livraison Phase 1 (infrastructure, Supabase, déploiement initial), suivie de la refonte intégrale Phase 2 (audit, concept, médias, design system 3 palettes, interactions avancées, migration Supabase Phase 2, cycles QA 1–3).

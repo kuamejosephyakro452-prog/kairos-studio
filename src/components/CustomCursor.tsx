@@ -31,12 +31,18 @@ export const CustomCursor: React.FC = () => {
     const onOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
+      const labeled = target.closest<HTMLElement>('[data-cursor]');
+      if (labeled) {
+        setIsHovering(true);
+        setHoverLabel(labeled.getAttribute('data-cursor'));
+        return;
+      }
       const interactive = target.closest<HTMLElement>(
-        'a, button, [data-cursor], [role="button"], input, textarea, select'
+        'a, button, [role="button"], input, textarea, select'
       );
       if (interactive) {
         setIsHovering(true);
-        setHoverLabel(interactive.getAttribute('data-cursor') || null);
+        setHoverLabel(null);
       } else {
         setIsHovering(false);
         setHoverLabel(null);
@@ -67,13 +73,19 @@ export const CustomCursor: React.FC = () => {
 
   return (
     <>
-      <div ref={dotRef} className="custom-cursor-dot" aria-hidden="true" />
+      <div
+        ref={dotRef}
+        className={`custom-cursor-dot ${hoverLabel ? 'opacity-0' : 'opacity-100'}`}
+        aria-hidden="true"
+      />
       <div
         ref={ringRef}
-        className={`custom-cursor-ring ${isHovering ? 'is-hover' : ''}`}
+        className={`custom-cursor-ring ${isHovering ? 'is-hover' : ''} ${
+          hoverLabel ? 'has-label' : ''
+        }`}
         aria-hidden="true"
       >
-        {hoverLabel && <span className="font-medium tracking-[0.18em]">{hoverLabel}</span>}
+        {hoverLabel && <span>{hoverLabel}</span>}
       </div>
     </>
   );

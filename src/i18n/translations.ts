@@ -6,7 +6,9 @@ export interface ServiceItem {
   title: string;
   tagline: string;
   description: string;
-  disciplines: string[];
+  deliverables: string[];
+  previewAssetId: string;
+  ambientColor: string;
 }
 
 export interface SkillGroup {
@@ -22,59 +24,68 @@ export interface SiteDictionary {
     projectTitleSuffix: string;
     legalTitle: string;
     privacyTitle: string;
+    notFoundTitle: string;
   };
   nav: {
     services: string;
     works: string;
+    explorer: string;
     founder: string;
-    skills: string;
     contact: string;
-    themeEditorial: string;
-    themeNocturne: string;
+    menu: string;
+    close: string;
     skipToContent: string;
-    openMenu: string;
-    closeMenu: string;
+    directAccess: string;
   };
   preloader: {
     caption: string;
   };
   hero: {
-    eyebrow: string;
+    badge: string;
     headlineLine1: string;
     headlineLine2: string;
+    headlineLine3: string;
     signature: string;
-    kairosNote: string;
+    clientPitch: string;
     ctaPrimary: string;
     ctaSecondary: string;
     scrollHint: string;
     showreelLabel: string;
+    monogramCaption: string;
   };
   manifesto: {
     label: string;
-    quote: string;
-    body: string;
-    pillars: { title: string; text: string }[];
+    statement: string;
+    subtext: string;
+    steps: { code: string; title: string; detail: string }[];
   };
   services: {
     label: string;
     title: string;
     subtitle: string;
-    items: ServiceItem[];
     exploreCategory: string;
+    hoverHint: string;
+    items: ServiceItem[];
   };
   categories: Record<ProjectCategory | 'all', string>;
   works: {
     label: string;
     title: string;
     subtitle: string;
-    horizontalHint: string;
+    modeGallery: string;
+    modeList: string;
+    modeExplore: string;
+    pinnedHint: string;
+    dragHint: string;
+    resetCanvas: string;
     viewProject: string;
-    allProjectsCount: string;
+    publishedCount: string;
+    demoBadge: string;
+    videoBadge: string;
+    visualBadge: string;
     emptyCategoryTitle: string;
     emptyCategoryText: string;
     viewAll: string;
-    videoBadge: string;
-    visualBadge: string;
   };
   founder: {
     label: string;
@@ -83,14 +94,14 @@ export interface SiteDictionary {
     headline: string;
     bio1: string;
     bio2: string;
-    principles: { label: string; value: string }[];
-    contactFounder: string;
+    pillars: { code: string; label: string; value: string }[];
+    skillsTitle: string;
+    skillsGroups: SkillGroup[];
+    contactCta: string;
   };
-  skills: {
-    label: string;
-    title: string;
-    subtitle: string;
-    groups: SkillGroup[];
+  marquee: {
+    row1: string[];
+    row2: string[];
   };
   contact: {
     label: string;
@@ -100,7 +111,8 @@ export interface SiteDictionary {
     emailLabel: string;
     whatsappLabel: string;
     whatsappCta: string;
-    responseNote: string;
+    floatingWhatsapp: string;
+    availabilityNote: string;
     form: {
       name: string;
       namePlaceholder: string;
@@ -127,23 +139,34 @@ export interface SiteDictionary {
   };
   projectDetail: {
     backToWorks: string;
+    caseStudyLabel: string;
     category: string;
     client: string;
     year: string;
     role: string;
     deliverables: string;
     visitLink: string;
+    contextHeading: string;
+    executionHeading: string;
     galleryHeading: string;
     videoHeading: string;
-    nextProject: string;
-    prevProject: string;
+    demoNotice: string;
+    nextProjectLabel: string;
     discussSimilar: string;
-    notFoundTitle: string;
-    notFoundText: string;
     fullscreenHint: string;
     closeLightbox: string;
   };
+  notFound: {
+    code: string;
+    title: string;
+    subtitle: string;
+    backHome: string;
+    viewWorks: string;
+  };
   footer: {
+    ctaEyebrow: string;
+    ctaTitle: string;
+    ctaButton: string;
     signature: string;
     navigation: string;
     directContact: string;
@@ -168,110 +191,126 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
     meta: {
       homeTitle: 'KAIROS STUDIO — Turning Ideas Into Experiences | Joseph Kouamé',
       homeDescription:
-        'Studio créatif et numérique polyvalent fondé par Joseph Kouamé : design graphique, production audiovisuelle, communication digitale, solutions numériques / TIC et création de sites web.',
+        'Studio créatif et numérique dirigé par Joseph Kouamé. Design graphique, production audiovisuelle, communication digitale, solutions numériques / TIC et création de sites web.',
       projectTitleSuffix: 'KAIROS STUDIO',
       legalTitle: 'Mentions légales — KAIROS STUDIO',
       privacyTitle: 'Politique de confidentialité — KAIROS STUDIO',
+      notFoundTitle: 'Page introuvable — KAIROS STUDIO',
     },
     nav: {
-      services: 'Domaines',
+      services: 'Expertises',
       works: 'Réalisations',
-      founder: 'Fondateur',
-      skills: 'Savoir-faire',
+      explorer: 'Explorer',
+      founder: 'Studio & Fondateur',
       contact: 'Contact',
-      themeEditorial: 'Clair',
-      themeNocturne: 'Sombre',
+      menu: 'Menu',
+      close: 'Fermer',
       skipToContent: 'Aller au contenu principal',
-      openMenu: 'Ouvrir le menu',
-      closeMenu: 'Fermer le menu',
+      directAccess: 'Échange direct',
     },
     preloader: {
-      caption: 'L’instant juste — Kairos Studio',
+      caption: 'Turning Ideas Into Experiences.',
     },
     hero: {
-      eyebrow: 'Studio créatif & numérique · Joseph Kouamé',
-      headlineLine1: 'Façonner l’instant,',
-      headlineLine2: 'élever l’expérience.',
+      badge: 'Studio créatif & numérique · Joseph Kouamé',
+      headlineLine1: 'Transformer',
+      headlineLine2: 'vos idées en',
+      headlineLine3: 'expériences.',
       signature: 'Turning Ideas Into Experiences.',
-      kairosNote:
-        'En grec ancien, Kairos désigne le moment opportun — cet instant précis où une vision trouve sa forme juste, son rythme et son impact.',
-      ctaPrimary: 'Explorer les réalisations',
-      ctaSecondary: 'Initier un projet',
-      scrollHint: 'Défiler',
-      showreelLabel: 'Extrait visuel du studio',
+      clientPitch:
+        'KAIROS STUDIO accompagne les marques, entreprises et créateurs avec une exécution complète : design graphique, films publicitaires, campagnes digitales, solutions TIC et sites web sur mesure.',
+      ctaPrimary: 'Démarrer un projet',
+      ctaSecondary: 'Voir les réalisations',
+      scrollHint: 'Défiler pour explorer',
+      showreelLabel: 'Aperçu studio',
+      monogramCaption: 'Déplacez le curseur · Emblème JK',
     },
     manifesto: {
-      label: 'Philosophie · Kairos',
-      quote:
-        'Une création juste ne cherche pas le bruit : elle arrive au bon moment, avec la bonne cadence et une clarté mémorable.',
-      body:
-        'KAIROS STUDIO réunit direction artistique, production audiovisuelle, stratégie digitale et ingénierie web au sein d’une même exigence. Chaque projet est pensé comme une expérience cohérente — du premier trait graphique jusqu’à sa mise en ligne.',
-      pillars: [
+      label: '01 · Du signal brut à l’expérience',
+      statement:
+        'Une idée seule reste invisible. Nous la sculptons en image, en film, en interface et en système numérique pour qu’elle capte l’attention dès la première seconde.',
+      subtext:
+        'Un même studio pour concevoir l’identité visuelle, produire la vidéo, structurer la présence digitale et développer le site web — sans perte de cohérence entre les disciplines.',
+      steps: [
         {
-          title: 'Justesse visuelle',
-          text: 'Hiérarchie typographique, maîtrise des contrastes et sens du détail sur chaque support.',
+          code: '01 / SIGNAL',
+          title: 'Clarifier l’intention',
+          detail: 'Comprendre votre audience, votre message clé et le support exact où votre marque doit marquer les esprits.',
         },
         {
-          title: 'Narration en mouvement',
-          text: 'Rythme cinématographique, montage précis et habillages conçus pour retenir l’attention.',
+          code: '02 / FORME',
+          title: 'Façonner la matière',
+          detail: 'Composition graphique, étalonnage vidéo, motion design et architecture d’interface conçus sur mesure.',
         },
         {
-          title: 'Maîtrise technique',
-          text: 'Interfaces rapides, accessibles et pensées mobile d’abord, sans compromis sur l’esthétique.',
+          code: '03 / EXPÉRIENCE',
+          title: 'Déployer avec impact',
+          detail: 'Livrables rapides, optimisés mobile et grand écran, prêts à convaincre vos clients dès la mise en ligne.',
         },
       ],
     },
     services: {
-      label: '01 — Domaines d’intervention',
-      title: 'Cinq disciplines, une même direction.',
+      label: '02 · Cinq disciplines intégrées',
+      title: 'Ce que nous réalisons pour vos projets',
       subtitle:
-        'Du visuel imprimé au film publicitaire, de la présence digitale aux solutions web et TIC, le studio accompagne les idées de bout en bout.',
-      exploreCategory: 'Voir les réalisations',
+        'Survolez ou sélectionnez une expertise pour découvrir son univers visuel et accéder aux réalisations associées.',
+      exploreCategory: 'Filtrer les réalisations',
+      hoverHint: 'Survolez une ligne pour révéler la scène',
       items: [
         {
           id: 'graphic-design',
           index: '01',
           title: 'Design graphique',
-          tagline: 'Identités, affiches & systèmes visuels de caractère',
+          tagline: 'Identités de marque, affiches & systèmes visuels',
           description:
-            'Conception d’affiches événementielles, identités visuelles, logotypes et compositions print ou numériques portés par une direction artistique rigoureuse.',
-          disciplines: ['Direction artistique', 'Affiches & print HD', 'Identité & logotype', 'Photomontage'],
+            'Création de chartes graphiques, logotypes, packagings et affiches haute définition pensés pour installer une présence visuelle immédiatement mémorable.',
+          deliverables: ['Identité & logotype', 'Affiches print & digitales', 'Manuels de marque', 'Photomontage HD'],
+          previewAssetId: 'dc2026-instagram',
+          ambientColor: '#FF5A3C',
         },
         {
           id: 'audiovisual',
           index: '02',
           title: 'Production audiovisuelle',
-          tagline: 'Films publicitaires, montage & habillage motion',
+          tagline: 'Films publicitaires, montage cinéma & motion design',
           description:
-            'Réalisation et post-production de spots publicitaires, montages rythmés, étalonnage cinématographique, design sonore et motion graphics calibrés pour chaque écran.',
-          disciplines: ['Spots publicitaires', 'Montage & étalonnage', 'Motion graphics', 'Formats multi-écrans'],
+            'Montage publicitaire dynamique, étalonnage colorimétrique, habillages HUD en motion graphics et mixage sonore calibrés pour le web, les réseaux et la diffusion HD.',
+          deliverables: ['Spots publicitaires', 'Montage & étalonnage', 'Motion graphics', 'Formats multi-écrans'],
+          previewAssetId: 'pub-nexora-poster',
+          ambientColor: '#5B2EFF',
         },
         {
           id: 'digital-communication',
           index: '03',
           title: 'Communication digitale',
-          tagline: 'Visuels éditoriaux & formats pensés pour l’engagement',
+          tagline: 'Campagnes visuelles conçues pour arrêter le scroll',
           description:
-            'Création de campagnes visuelles adaptées aux usages mobiles (statuts, feeds, formats courts), en respectant les zones de sécurité, la lisibilité immédiate et la cohérence de marque.',
-          disciplines: ['Campagnes visuelles', 'Formats mobiles 9:16 & 1:1', 'Déclinaisons éditoriales', 'Stratégie de contenu'],
+            'Déclinaisons sociales haute conversion (formats 9:16 Statut WhatsApp, carrés 1:1, visuels produits) respectant strictement les marges mobiles et la lisibilité instantanée.',
+          deliverables: ['Campagnes produits', 'Statuts WhatsApp 9:16', 'Visuels Feed 1:1 & 4:5', 'Direction créative sociale'],
+          previewAssetId: 'louange-carre',
+          ambientColor: '#E6007E',
         },
         {
           id: 'digital-solutions',
           index: '04',
           title: 'Solutions numériques / TIC',
-          tagline: 'Outils sur mesure, automatisation & accompagnement',
+          tagline: 'Outils pragmatiques, automatisation & architecture',
           description:
-            'Conception d’outils numériques pragmatiques, automatisation de flux de travail, intégration de services cloud et conseil technique pour moderniser les opérations.',
-          disciplines: ['Automatisation de flux', 'Intégration d’outils', 'Architecture numérique', 'Conseil TIC'],
+            'Mise en place d’outils numériques sur mesure, automatisation de processus créatifs ou métiers, intégrations cloud et conseil TIC pour accélérer vos opérations.',
+          deliverables: ['Automatisation de flux', 'Intégrations cloud & bases', 'Outils internes', 'Conseil numérique'],
+          previewAssetId: 'tpl-solution-global',
+          ambientColor: '#00A884',
         },
         {
           id: 'web-creation',
           index: '05',
           title: 'Création de sites web',
-          tagline: 'Vitrines éditoriales & expériences web rapides',
+          tagline: 'Vitrines interactives, portfolios & plateformes rapides',
           description:
-            'Design d’interface et développement front-end de sites vitrines, portfolios et plateformes administrables alliant esthétique soignée, performance et référencement naturel.',
-          disciplines: ['Sites vitrines sur mesure', 'UI / UX éditorial', 'Performance & SEO', 'Espaces administrables'],
+            'Conception UI/UX et développement front-end de sites web modernes, animés, rapides sur mobile, optimisés pour le référencement naturel et simples à administrer.',
+          deliverables: ['Sites vitrines sur mesure', 'Expériences animées', 'SEO technique & vitesse', 'Administration privée'],
+          previewAssetId: 'tpl-ecommerce-session',
+          ambientColor: '#FF6B00',
         },
       ],
     },
@@ -284,106 +323,121 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       'web-creation': 'Création de sites web',
     },
     works: {
-      label: '02 — Sélection choisie',
+      label: '03 · Sélection & Table lumineuse',
       title: 'Réalisations',
       subtitle:
-        'Une sélection de productions originales réalisées au studio — films, affiches et campagnes visuelles.',
-      horizontalHint: 'Défilement horizontal · Faites glisser ou utilisez les filtres',
-      viewProject: 'Découvrir le projet',
-      allProjectsCount: 'projets publiés',
-      emptyCategoryTitle: 'Nouvelles pièces en préparation',
+        'Parcourez les créations en défilement horizontal, explorez la liste interactive ou glissez librement sur le canevas du studio.',
+      modeGallery: 'Galerie',
+      modeList: 'Index',
+      modeExplore: 'Explorer',
+      pinnedHint: 'Défilement horizontal guidé · Faites défiler pour traverser les projets',
+      dragHint: 'Maintenez et glissez le canevas librement · Cliquez une pièce pour l’ouvrir',
+      resetCanvas: 'Recentrer',
+      viewProject: 'Voir l’étude de cas',
+      publishedCount: 'pièces publiées',
+      demoBadge: 'Démo',
+      videoBadge: 'Vidéo',
+      visualBadge: 'Visuel',
+      emptyCategoryTitle: 'Aucune pièce dans cette discipline',
       emptyCategoryText:
-        'Les réalisations de cette discipline seront publiées ici très prochainement. Vous pouvez consulter l’ensemble de la galerie ou discuter directement de votre projet.',
-      viewAll: 'Afficher toutes les réalisations',
-      videoBadge: 'Film & Motion',
-      visualBadge: 'Direction visuelle',
+        'Afficher toutes les réalisations ou discuter directement de votre projet avec le studio.',
+      viewAll: 'Tout afficher',
     },
     founder: {
-      label: '03 — Direction créative',
+      label: '04 · Le Fondateur',
       name: 'Joseph Kouamé',
       role: 'Fondateur & Directeur créatif',
-      headline: 'Relier l’œil du créatif et la rigueur du numérique.',
+      headline: 'Sensibilité visuelle et exécution technique réunies dans un seul regard.',
       bio1:
-        'À l’origine de KAIROS STUDIO, une conviction simple : les meilleures expériences naissent lorsque la sensibilité artistique dialogue directement avec la maîtrise technique.',
+        'À la tête de KAIROS STUDIO, Joseph Kouamé réunit direction artistique, production audiovisuelle et développement numérique au sein d’une même démarche exigeante.',
       bio2:
-        'De la composition d’une affiche au montage d’un film publicitaire, jusqu’à l’architecture d’un site web ou d’une solution numérique, Joseph Kouamé conduit chaque projet avec la même attention au rythme, à la clarté et à la finition.',
-      principles: [
-        { label: 'Signature', value: 'Turning Ideas Into Experiences.' },
-        { label: 'Approche', value: 'Polyvalence maîtrisée & exécution directe' },
-        { label: 'Exigence', value: 'Clarté éditoriale, rapidité & finition' },
+        'Du concept graphique initial jusqu’au montage final ou à la mise en ligne d’une interface web, chaque projet est piloté en direct, sans intermédiaire, avec une attention constante à la clarté, au rythme et à la finition.',
+      pillars: [
+        { code: 'JK // 01', label: 'Signature', value: 'Turning Ideas Into Experiences.' },
+        { code: 'JK // 02', label: 'Spectre', value: 'Graphisme, Vidéo, Digital, TIC & Web' },
+        { code: 'JK // 03', label: 'Engagement', value: 'Interlocuteur direct du brief à la livraison' },
       ],
-      contactFounder: 'Échanger avec Joseph Kouamé',
-    },
-    skills: {
-      label: '04 — Savoir-faire & outils',
-      title: 'Architecture de compétences',
-      subtitle:
-        'Une chaîne de production complète réunissant création visuelle, post-production vidéo et développement web moderne.',
-      groups: [
+      skillsTitle: 'Chaîne de production & outils maîtrisés',
+      skillsGroups: [
         {
-          index: 'I',
-          title: 'Direction artistique & Design',
+          index: '01',
+          title: 'Image & Direction artistique',
           items: [
-            'Composition éditoriale & affiches HD',
-            'Identité visuelle & systèmes graphiques',
-            'Retouche & photomontage (Adobe Photoshop)',
-            'Création vectorielle (Adobe Illustrator)',
-            'Déclinaisons print & réseaux sociaux',
+            'Direction visuelle, affiches HD & systèmes de marque',
+            'Photomontage & retouche avancée (Adobe Photoshop)',
+            'Création vectorielle & logotypes (Adobe Illustrator)',
+            'Déclinaisons print & réseaux sociaux calibrées',
           ],
         },
         {
-          index: 'II',
-          title: 'Audiovisuel & Mouvement',
+          index: '02',
+          title: 'Film, Montage & Motion',
           items: [
             'Montage publicitaire & narratif (DaVinci Resolve)',
-            'Étalonnage colorimétrique cinéma',
-            'Motion graphics & habillages d’écran',
-            'Mixage voix-off, musique & sound design',
-            'Optimisation vidéo multi-plateformes',
+            'Étalonnage colorimétrique cinématographique',
+            'Habillages d’écran & motion graphics',
+            'Compression web multi-supports (MP4 / WebM)',
           ],
         },
         {
-          index: 'III',
-          title: 'Web, TIC & Numérique',
+          index: '03',
+          title: 'Web, Shaders & Solutions TIC',
           items: [
             'Interfaces responsives & design systems',
             'Développement front-end (React, TypeScript, Vite)',
-            'Animations web fluides (GSAP, WebGL léger)',
-            'SEO technique, accessibilité & performance',
-            'Bases de données sécurisées & automatisation',
+            'Chorégraphie GSAP, ScrollTrigger & WebGL GLSL',
+            'Bases sécurisées Supabase, RLS & automatisation',
           ],
         },
       ],
+      contactCta: 'Parler directement à Joseph Kouamé',
+    },
+    marquee: {
+      row1: [
+        'DESIGN GRAPHIQUE',
+        'PRODUCTION AUDIOVISUELLE',
+        'COMMUNICATION DIGITALE',
+        'SOLUTIONS NUMÉRIQUES / TIC',
+        'CRÉATION DE SITES WEB',
+      ],
+      row2: [
+        'TURNING IDEAS INTO EXPERIENCES',
+        'KAIROS STUDIO',
+        'DIRECTION ARTISTIQUE',
+        'MOTION & WEB',
+        'JOSEPH KOUAMÉ',
+      ],
     },
     contact: {
-      label: '05 — Prendre contact',
-      title: 'C’est le bon moment pour donner forme à votre idée.',
+      label: '05 · Parler de votre projet',
+      title: 'Donnons vie à votre prochaine expérience.',
       subtitle:
-        'Parlez-moi de votre projet — affiche, film publicitaire, campagne digitale, site web ou solution numérique. Réponse directe et sans intermédiaire.',
-      directHeading: 'Canaux directs',
-      emailLabel: 'Courriel',
+        'Un visuel marquant, un film publicitaire, une campagne digitale ou un site web sur mesure ? Décrivez votre besoin et obtenez une réponse directe.',
+      directHeading: 'Contact direct sans intermédiaire',
+      emailLabel: 'E-mail direct',
       whatsappLabel: 'WhatsApp direct',
-      whatsappCta: 'Écrire sur WhatsApp',
-      responseNote: 'Échange direct avec Joseph Kouamé · Français & English',
+      whatsappCta: 'Discuter sur WhatsApp',
+      floatingWhatsapp: 'WhatsApp',
+      availabilityNote: 'Réponse directe par Joseph Kouamé · Français & English',
       form: {
         name: 'Nom complet',
-        namePlaceholder: 'Votre nom ou organisation',
+        namePlaceholder: 'Votre nom ou entreprise',
         email: 'Adresse e-mail',
-        emailPlaceholder: 'vous@exemple.com',
+        emailPlaceholder: 'vous@entreprise.com',
         phone: 'Téléphone / WhatsApp (optionnel)',
         phonePlaceholder: '+225 ...',
-        service: 'Domaine concerné',
-        servicePlaceholder: 'Sélectionnez un domaine',
+        service: 'Discipline souhaitée',
+        servicePlaceholder: 'Choisir une discipline',
         message: 'Votre projet',
-        messagePlaceholder: 'Décrivez vos objectifs, le support envisagé et vos attentes...',
-        submit: 'Envoyer le message',
+        messagePlaceholder: 'Parlez-moi de votre objectif, de votre support et de vos attentes...',
+        submit: 'Envoyer ma demande',
         submitting: 'Envoi en cours...',
         successTitle: 'Message transmis avec succès',
-        successBody: 'Merci pour votre prise de contact. Joseph Kouamé vous répondra dans les meilleurs délais.',
-        fallbackTitle: 'Connexion temporairement indisponible',
+        successBody: 'Merci pour votre prise de contact. Joseph Kouamé vous répondra rapidement.',
+        fallbackTitle: 'Poursuivre directement sur WhatsApp',
         fallbackBody:
-          'L’enregistrement direct n’a pas abouti pour le moment. Pour ne rien perdre de votre demande, poursuivez instantanément sur WhatsApp avec votre message pré-rempli.',
-        fallbackButton: 'Continuer sur WhatsApp',
+          'L’enregistrement direct n’a pas pu aboutir pour le moment. Votre message est prêt : cliquez ci-dessous pour l’envoyer immédiatement sur WhatsApp.',
+        fallbackButton: 'Envoyer sur WhatsApp',
         validationName: 'Veuillez saisir votre nom (au moins 2 caractères).',
         validationEmail: 'Veuillez saisir une adresse e-mail valide.',
         validationMessage: 'Veuillez décrire votre demande en au moins 10 caractères.',
@@ -391,90 +445,102 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       },
     },
     projectDetail: {
-      backToWorks: 'Retour aux réalisations',
+      backToWorks: 'Toutes les réalisations',
+      caseStudyLabel: 'Étude de cas',
       category: 'Discipline',
-      client: 'Commanditaire',
+      client: 'Client',
       year: 'Année',
       role: 'Rôle',
       deliverables: 'Livrables',
-      visitLink: 'Consulter le projet',
-      galleryHeading: 'Planches & visuels',
-      videoHeading: 'Projection du film',
-      nextProject: 'Projet suivant',
-      prevProject: 'Projet précédent',
-      discussSimilar: 'Discuter d’un projet similaire',
-      notFoundTitle: 'Réalisation introuvable',
-      notFoundText: 'Ce projet n’est pas disponible ou n’est pas encore publié.',
-      fullscreenHint: 'Cliquer pour afficher en plein écran',
+      visitLink: 'Ouvrir le lien',
+      contextHeading: 'Présentation',
+      executionHeading: 'Ce qui a été réalisé',
+      galleryHeading: 'Planches & détails',
+      videoHeading: 'Lecture vidéo',
+      demoNotice:
+        'Séquence de démonstration temporaire libre de droits (Pexels), présentée uniquement pour illustrer le lecteur vidéo du portfolio.',
+      nextProjectLabel: 'Projet suivant',
+      discussSimilar: 'Un projet similaire en tête ?',
+      fullscreenHint: 'Cliquer pour agrandir',
       closeLightbox: 'Fermer l’aperçu plein écran',
     },
+    notFound: {
+      code: 'ERR // 404',
+      title: 'Signal hors cadre.',
+      subtitle: 'La page demandée n’existe pas ou a été déplacée. Revenez à l’accueil ou explorez la galerie du studio.',
+      backHome: 'Retour à l’accueil',
+      viewWorks: 'Voir les réalisations',
+    },
     footer: {
+      ctaEyebrow: 'Prêt à lancer votre projet ?',
+      ctaTitle: 'Transformons votre idée en expérience mémorable.',
+      ctaButton: 'Démarrer une conversation',
       signature: 'Turning Ideas Into Experiences.',
       navigation: 'Navigation',
       directContact: 'Contact direct',
       legalNotice: 'Mentions légales',
       privacyPolicy: 'Confidentialité',
       rights: 'KAIROS STUDIO — Joseph Kouamé. Tous droits réservés.',
-      backToTop: 'Haut de page',
+      backToTop: 'Haut',
     },
     legal: {
       backHome: 'Retour à l’accueil',
       legalNoticeTitle: 'Mentions légales',
       legalNoticeIntro:
-        'Informations relatives à l’édition et à la mise en ligne du portfolio officiel de KAIROS STUDIO.',
+        'Informations générales relatives à l’édition et à l’hébergement du portfolio KAIROS STUDIO.',
       legalSections: [
         {
-          heading: '1. Éditeur du site',
+          heading: '1. Éditeur',
           paragraphs: [
             'Le présent site est édité par KAIROS STUDIO, représenté par son fondateur et directeur créatif Joseph Kouamé.',
-            'Contact électronique : kuamejosephyakro452@gmail.com — WhatsApp : +225 07 89 50 17 05.',
+            'E-mail : kuamejosephyakro452@gmail.com — WhatsApp : +225 07 89 50 17 05.',
           ],
         },
         {
-          heading: '2. Hébergement',
+          heading: '2. Hébergement & Infrastructure',
           paragraphs: [
-            'Le site public est hébergé via le service GitHub Pages (GitHub, Inc.). Les fonctionnalités de formulaire de contact et d’administration s’appuient sur l’infrastructure Supabase.',
+            'Le site vitrine statique est hébergé via GitHub Pages (GitHub, Inc.). Le formulaire de contact et l’administration privée reposent sur Supabase.',
           ],
         },
         {
           heading: '3. Propriété intellectuelle',
           paragraphs: [
-            'Sauf mention contraire, l’ensemble des créations présentées (textes, compositions graphiques, vidéos, interfaces, monogramme JK et identité KAIROS STUDIO) demeure la propriété de son auteur. Toute reproduction ou utilisation sans autorisation préalable est interdite.',
+            'L’identité KAIROS STUDIO, le monogramme JK, le code, les textes et les créations originales présentées demeurent la propriété de leur auteur. Les éventuelles séquences de démonstration temporaires proviennent de banques libres de droits identifiées.',
           ],
         },
         {
           heading: '4. Responsabilité',
           paragraphs: [
-            'KAIROS STUDIO veille à l’exactitude des contenus publiés sur ce portfolio et se réserve le droit de les actualiser à tout moment sans préavis.',
+            'KAIROS STUDIO actualise régulièrement les contenus de ce portfolio et peut les modifier à tout moment sans préavis.',
           ],
         },
       ],
       privacyTitle: 'Politique de confidentialité',
       privacyIntro:
-        'KAIROS STUDIO accorde une importance particulière à la confidentialité et à la sobriété dans la collecte de données.',
+        'KAIROS STUDIO collecte uniquement les informations strictement nécessaires pour répondre à vos demandes.',
       privacySections: [
         {
           heading: '1. Données collectées',
           paragraphs: [
-            'Aucune inscription ni aucun traceur publicitaire n’est utilisé sur ce site. Les seules données personnelles transmises sont celles que vous renseignez volontairement dans le formulaire de contact (nom, adresse e-mail, téléphone optionnel, domaine souhaité et message).',
+            'Aucun traceur publicitaire ni inscription publique n’est utilisé. Seules les informations soumises volontairement dans le formulaire de contact (nom, e-mail, téléphone optionnel, discipline, message) sont enregistrées.',
           ],
         },
         {
-          heading: '2. Finalité et conservation',
+          heading: '2. Usage et conservation',
           paragraphs: [
-            'Les informations envoyées via le formulaire servent exclusivement à répondre à votre demande et à échanger autour de votre projet. Elles ne sont ni vendues, ni cédées à des tiers, et sont conservées uniquement le temps nécessaire au suivi de la conversation.',
+            'Vos données servent uniquement à répondre à votre demande de projet. Elles ne sont ni vendues ni transmises à des tiers.',
           ],
         },
         {
-          heading: '3. Stockage local (préférences)',
+          heading: '3. Préférences locales',
           paragraphs: [
-            'Votre préférence de langue (français / anglais) et de thème visuel (clair / sombre) est enregistrée localement dans votre navigateur (localStorage) pour améliorer votre confort de navigation.',
+            'Votre choix de langue (FR/EN) et de palette visuelle est enregistré localement dans votre navigateur (localStorage).',
           ],
         },
         {
-          heading: '4. Vos droits & contact',
+          heading: '4. Contact & suppression',
           paragraphs: [
-            'Vous pouvez à tout moment demander l’accès, la rectification ou la suppression de vos messages en écrivant à kuamejosephyakro452@gmail.com.',
+            'Pour toute demande d’accès ou de suppression de vos messages, écrivez à kuamejosephyakro452@gmail.com.',
           ],
         },
       ],
@@ -485,110 +551,126 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
     meta: {
       homeTitle: 'KAIROS STUDIO — Turning Ideas Into Experiences | Joseph Kouamé',
       homeDescription:
-        'Multidisciplinary creative and digital studio founded by Joseph Kouamé: graphic design, audiovisual production, digital communication, ICT solutions, and web creation.',
+        'Creative and digital studio led by Joseph Kouamé. Graphic design, audiovisual production, digital communication, ICT solutions, and bespoke web creation.',
       projectTitleSuffix: 'KAIROS STUDIO',
       legalTitle: 'Legal Notice — KAIROS STUDIO',
       privacyTitle: 'Privacy Policy — KAIROS STUDIO',
+      notFoundTitle: 'Page Not Found — KAIROS STUDIO',
     },
     nav: {
-      services: 'Disciplines',
+      services: 'Capabilities',
       works: 'Selected Works',
-      founder: 'Founder',
-      skills: 'Craft',
+      explorer: 'Explore',
+      founder: 'Studio & Founder',
       contact: 'Contact',
-      themeEditorial: 'Light',
-      themeNocturne: 'Dark',
+      menu: 'Menu',
+      close: 'Close',
       skipToContent: 'Skip to main content',
-      openMenu: 'Open menu',
-      closeMenu: 'Close menu',
+      directAccess: 'Direct inquiry',
     },
     preloader: {
-      caption: 'The opportune moment — Kairos Studio',
+      caption: 'Turning Ideas Into Experiences.',
     },
     hero: {
-      eyebrow: 'Creative & Digital Studio · Joseph Kouamé',
-      headlineLine1: 'Shaping the moment,',
-      headlineLine2: 'elevating the craft.',
+      badge: 'Creative & Digital Studio · Joseph Kouamé',
+      headlineLine1: 'Turning bold',
+      headlineLine2: 'ideas into',
+      headlineLine3: 'experiences.',
       signature: 'Turning Ideas Into Experiences.',
-      kairosNote:
-        'In ancient Greek, Kairos names the opportune moment — the precise instant when an idea finds its right form, cadence, and lasting resonance.',
-      ctaPrimary: 'Explore selected works',
-      ctaSecondary: 'Start a project',
-      scrollHint: 'Scroll',
-      showreelLabel: 'Studio visual excerpt',
+      clientPitch:
+        'KAIROS STUDIO partners with ambitious brands, organizations, and founders across graphic design, commercial film, digital campaigns, ICT solutions, and bespoke websites.',
+      ctaPrimary: 'Start a project',
+      ctaSecondary: 'Explore works',
+      scrollHint: 'Scroll to explore',
+      showreelLabel: 'Studio reel',
+      monogramCaption: 'Move cursor · JK Emblem',
     },
     manifesto: {
-      label: 'Philosophy · Kairos',
-      quote:
-        'Purposeful craft never chases noise: it arrives at the right instant, with measured cadence and unmistakable clarity.',
-      body:
-        'KAIROS STUDIO brings together art direction, audiovisual production, digital communication, and web engineering under one cohesive standard. Every project is shaped as a complete experience — from the first visual gesture to final delivery.',
-      pillars: [
+      label: '01 · From Raw Signal to Living Experience',
+      statement:
+        'An idea alone stays invisible. We shape it into bold visuals, commercial film, fluid websites, and digital systems built to command attention from the very first second.',
+      subtext:
+        'One unified creative studio handling visual identity, video post-production, digital campaigns, and web engineering — keeping every touchpoint unmistakably coherent.',
+      steps: [
         {
-          title: 'Visual precision',
-          text: 'Editorial typography, disciplined contrast, and meticulous composition across every medium.',
+          code: '01 / SIGNAL',
+          title: 'Sharpen the message',
+          detail: 'Define your audience, focal point, and exact medium so every creative decision serves business impact.',
         },
         {
-          title: 'Motion storytelling',
-          text: 'Cinematic pacing, clean editing, and motion graphics crafted to hold attention.',
+          code: '02 / CRAFT',
+          title: 'Sculpt the medium',
+          detail: 'High-impact typography, cinematic grading, motion graphics, and responsive web architecture built from scratch.',
         },
         {
-          title: 'Technical fluency',
-          text: 'Fast, accessible, mobile-first digital interfaces built without compromising visual poise.',
+          code: '03 / EXPERIENCE',
+          title: 'Launch with momentum',
+          detail: 'Fast, mobile-ready deliverables engineered to earn trust and convert clients on every screen.',
         },
       ],
     },
     services: {
-      label: '01 — Disciplines',
-      title: 'Five practices, one coherent vision.',
+      label: '02 · Five Integrated Practices',
+      title: 'What we craft for your brand',
       subtitle:
-        'From print posters to commercial film, from mobile campaigns to web platforms and ICT solutions, the studio guides ideas end to end.',
-      exploreCategory: 'View works',
+        'Hover or select any capability to shift the visual atmosphere and jump directly to related works.',
+      exploreCategory: 'Filter related works',
+      hoverHint: 'Hover a row to preview its visual world',
       items: [
         {
           id: 'graphic-design',
           index: '01',
           title: 'Graphic Design',
-          tagline: 'Identities, posters & distinctive visual systems',
+          tagline: 'Brand identities, posters & distinctive visual systems',
           description:
-            'Event posters, brand marks, visual systems, and print or digital artworks anchored in strong typography and balanced art direction.',
-          disciplines: ['Art direction', 'High-res posters & print', 'Logo & visual identity', 'Photo compositing'],
+            'Brand guidelines, logotypes, packaging direction, and high-resolution event posters engineered to establish instant visual authority.',
+          deliverables: ['Visual identity & logos', 'Print & digital posters', 'Brand manuals', 'High-res compositing'],
+          previewAssetId: 'dc2026-instagram',
+          ambientColor: '#FF5A3C',
         },
         {
           id: 'audiovisual',
           index: '02',
           title: 'Audiovisual Production',
-          tagline: 'Commercial films, editing & motion graphics',
+          tagline: 'Commercial films, cinema editing & motion graphics',
           description:
-            'End-to-end commercial video production, rhythmic editing, cinematic color grading, sound design, and crisp motion graphics tailored for every screen.',
-          disciplines: ['Commercial spots', 'Editing & grading', 'Motion graphics', 'Multi-screen masters'],
+            'Dynamic commercial editing, cinematic color grading, custom HUD motion overlays, and crisp audio mixing calibrated for web and HD broadcast.',
+          deliverables: ['Commercial spots', 'Editing & grading', 'Motion graphics', 'Multi-screen masters'],
+          previewAssetId: 'pub-nexora-poster',
+          ambientColor: '#5B2EFF',
         },
         {
           id: 'digital-communication',
           index: '03',
           title: 'Digital Communication',
-          tagline: 'Editorial visuals & mobile-native formats',
+          tagline: 'Scroll-stopping visual campaigns for mobile feeds',
           description:
-            'Visual campaigns tailored for modern mobile channels (vertical status, square feeds, short formats), honoring interface safe zones and instant legibility.',
-          disciplines: ['Visual campaigns', '9:16 & 1:1 mobile formats', 'Editorial adaptations', 'Content direction'],
+            'High-impact social assets tailored for 9:16 mobile status, 1:1 product campaigns, and multi-platform launches honoring interface safe zones.',
+          deliverables: ['Product campaigns', '9:16 WhatsApp Status', '1:1 & 4:5 Feed kits', 'Social art direction'],
+          previewAssetId: 'louange-carre',
+          ambientColor: '#E6007E',
         },
         {
           id: 'digital-solutions',
           index: '04',
           title: 'Digital Solutions / ICT',
-          tagline: 'Custom tools, workflow automation & advisory',
+          tagline: 'Pragmatic tools, automation & cloud systems',
           description:
-            'Pragmatic digital tooling, creative and operational workflow automation, cloud service integration, and technical guidance for growing teams.',
-          disciplines: ['Workflow automation', 'Systems integration', 'Digital architecture', 'ICT advisory'],
+            'Custom digital utilities, creative and operational workflow automation, cloud integrations, and practical ICT advisory to modernize teams.',
+          deliverables: ['Workflow automation', 'Cloud & DB integration', 'Custom tooling', 'ICT advisory'],
+          previewAssetId: 'tpl-solution-global',
+          ambientColor: '#00A884',
         },
         {
           id: 'web-creation',
           index: '05',
           title: 'Web Creation',
-          tagline: 'Editorial websites & high-speed web experiences',
+          tagline: 'Interactive showcases, portfolios & fast web platforms',
           description:
-            'Interface design and front-end engineering for showcase websites, portfolios, and manageable web platforms blending luxury aesthetics with performance and SEO.',
-          disciplines: ['Bespoke showcase sites', 'Editorial UI / UX', 'Performance & SEO', 'Private CMS / Admin'],
+            'Bespoke UI/UX design and front-end engineering for expressive, mobile-first websites combining fluid motion, technical SEO, and private administration.',
+          deliverables: ['Bespoke showcase sites', 'Fluid web animation', 'Technical SEO & speed', 'Private admin CMS'],
+          previewAssetId: 'tpl-ecommerce-session',
+          ambientColor: '#FF6B00',
         },
       ],
     },
@@ -601,106 +683,120 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       'web-creation': 'Web Creation',
     },
     works: {
-      label: '02 — Curated Archive',
+      label: '03 · Selected Works & Light Table',
       title: 'Selected Works',
       subtitle:
-        'A curated selection of original studio productions — commercial film, posters, and mobile visual campaigns.',
-      horizontalHint: 'Horizontal gallery · Scroll or filter by discipline',
+        'Glide through the pinned horizontal gallery, browse the hover-trail index, or drag freely across the studio canvas.',
+      modeGallery: 'Gallery',
+      modeList: 'Index',
+      modeExplore: 'Explore',
+      pinnedHint: 'Guided horizontal gallery · Scroll to move across projects',
+      dragHint: 'Click and drag freely across the canvas · Open any piece',
+      resetCanvas: 'Recenter',
       viewProject: 'Open case study',
-      allProjectsCount: 'published works',
-      emptyCategoryTitle: 'New pieces in preparation',
-      emptyCategoryText:
-        'Selected works for this discipline will be published here soon. Feel free to browse the full gallery or reach out to discuss your upcoming project.',
-      viewAll: 'View all published works',
-      videoBadge: 'Film & Motion',
-      visualBadge: 'Visual Direction',
+      publishedCount: 'published pieces',
+      demoBadge: 'Demo',
+      videoBadge: 'Video',
+      visualBadge: 'Visual',
+      emptyCategoryTitle: 'No works in this discipline yet',
+      emptyCategoryText: 'Browse all published pieces or reach out to start your project with the studio.',
+      viewAll: 'View all works',
     },
     founder: {
-      label: '03 — Creative Direction',
+      label: '04 · The Founder',
       name: 'Joseph Kouamé',
       role: 'Founder & Creative Director',
-      headline: 'Bridging creative intuition with digital rigor.',
+      headline: 'Visual sensibility and technical precision united under one roof.',
       bio1:
-        'KAIROS STUDIO rests on a clear belief: memorable experiences happen when artistic sensitivity works hand in hand with technical command.',
+        'Leading KAIROS STUDIO, Joseph Kouamé bridges art direction, audiovisual post-production, and modern web engineering within one focused practice.',
       bio2:
-        'From poster art direction and commercial film post-production to web architecture and digital solutions, Joseph Kouamé leads every mandate with the same devotion to cadence, clarity, and finish.',
-      principles: [
-        { label: 'Signature', value: 'Turning Ideas Into Experiences.' },
-        { label: 'Approach', value: 'Multidisciplinary craft & hands-on execution' },
-        { label: 'Standard', value: 'Editorial clarity, speed & refinement' },
+        'From the first graphic concept to the final film cut or website launch, every project is led directly — no layers, no friction, total dedication to clarity and craft.',
+      pillars: [
+        { code: 'JK // 01', label: 'Signature', value: 'Turning Ideas Into Experiences.' },
+        { code: 'JK // 02', label: 'Range', value: 'Design, Film, Digital, ICT & Web' },
+        { code: 'JK // 03', label: 'Commitment', value: 'Direct collaboration from brief to launch' },
       ],
-      contactFounder: 'Connect with Joseph Kouamé',
-    },
-    skills: {
-      label: '04 — Craft & Tooling',
-      title: 'Capabilities Architecture',
-      subtitle:
-        'An integrated production pipeline connecting visual design, audiovisual post-production, and modern web engineering.',
-      groups: [
+      skillsTitle: 'Production stack & core craft',
+      skillsGroups: [
         {
-          index: 'I',
-          title: 'Art Direction & Graphic Design',
+          index: '01',
+          title: 'Visuals & Art Direction',
           items: [
-            'Editorial layouts & high-resolution posters',
-            'Brand marks & structured visual systems',
-            'Retouching & compositing (Adobe Photoshop)',
+            'Brand direction, HD posters & visual systems',
+            'Retouching & multi-layer compositing (Adobe Photoshop)',
             'Vector design & logotypes (Adobe Illustrator)',
-            'Print & social format adaptations',
+            'Print & mobile-native social adaptations',
           ],
         },
         {
-          index: 'II',
-          title: 'Audiovisual & Motion',
+          index: '02',
+          title: 'Film, Editing & Motion',
           items: [
             'Commercial & narrative editing (DaVinci Resolve)',
             'Cinematic color grading & visual cohesion',
-            'Motion graphics & kinetic screen overlays',
-            'Voice-over, music & sound design mixing',
-            'Web & mobile video optimization',
+            'Screen overlays & kinetic motion graphics',
+            'Multi-platform web video optimization (MP4 / WebM)',
           ],
         },
         {
-          index: 'III',
-          title: 'Web, ICT & Digital Systems',
+          index: '03',
+          title: 'Web, Shaders & ICT Systems',
           items: [
-            'Responsive interfaces & editorial design systems',
+            'Responsive interfaces & token design systems',
             'Front-end engineering (React, TypeScript, Vite)',
-            'Fluid web motion (GSAP, lightweight WebGL)',
-            'Technical SEO, accessibility & web performance',
-            'Secure cloud databases & workflow automation',
+            'GSAP choreography, ScrollTrigger & WebGL GLSL',
+            'Secure Supabase databases, RLS & automation',
           ],
         },
       ],
+      contactCta: 'Speak directly with Joseph Kouamé',
+    },
+    marquee: {
+      row1: [
+        'GRAPHIC DESIGN',
+        'AUDIOVISUAL PRODUCTION',
+        'DIGITAL COMMUNICATION',
+        'DIGITAL SOLUTIONS / ICT',
+        'WEB CREATION',
+      ],
+      row2: [
+        'TURNING IDEAS INTO EXPERIENCES',
+        'KAIROS STUDIO',
+        'ART DIRECTION',
+        'MOTION & WEB',
+        'JOSEPH KOUAMÉ',
+      ],
     },
     contact: {
-      label: '05 — Inquiries',
-      title: 'The right moment to bring your idea into focus.',
+      label: '05 · Start a Project',
+      title: 'Let’s build your next standout experience.',
       subtitle:
-        'Tell me about your project — poster, commercial film, digital campaign, website, or ICT solution. Direct conversation, no intermediaries.',
-      directHeading: 'Direct channels',
-      emailLabel: 'Email',
+        'Looking for a bold visual identity, a commercial film, a digital campaign, or a bespoke website? Share your brief for a direct response.',
+      directHeading: 'Direct channels, zero intermediaries',
+      emailLabel: 'Direct email',
       whatsappLabel: 'Direct WhatsApp',
       whatsappCta: 'Message on WhatsApp',
-      responseNote: 'Direct conversation with Joseph Kouamé · Français & English',
+      floatingWhatsapp: 'WhatsApp',
+      availabilityNote: 'Direct conversation with Joseph Kouamé · Français & English',
       form: {
         name: 'Full name',
-        namePlaceholder: 'Your name or organization',
+        namePlaceholder: 'Your name or company',
         email: 'Email address',
-        emailPlaceholder: 'you@example.com',
+        emailPlaceholder: 'you@company.com',
         phone: 'Phone / WhatsApp (optional)',
         phonePlaceholder: '+225 ...',
         service: 'Discipline',
         servicePlaceholder: 'Select a discipline',
         message: 'Project brief',
-        messagePlaceholder: 'Share your goals, expected format, and creative direction...',
-        submit: 'Send message',
+        messagePlaceholder: 'Share your goal, expected format, and creative direction...',
+        submit: 'Send inquiry',
         submitting: 'Sending...',
-        successTitle: 'Message received',
-        successBody: 'Thank you for reaching out. Joseph Kouamé will get back to you shortly.',
-        fallbackTitle: 'Direct submission temporarily unavailable',
+        successTitle: 'Message sent successfully',
+        successBody: 'Thank you for reaching out. Joseph Kouamé will reply promptly.',
+        fallbackTitle: 'Continue directly on WhatsApp',
         fallbackBody:
-          'We could not store your message right now. To make sure your request reaches the studio immediately, continue on WhatsApp with your message pre-filled.',
-        fallbackButton: 'Continue on WhatsApp',
+          'Direct storage is temporarily unavailable. Your brief is pre-filled below so you can reach the studio immediately on WhatsApp.',
+        fallbackButton: 'Send via WhatsApp',
         validationName: 'Please enter your name (at least 2 characters).',
         validationEmail: 'Please enter a valid email address.',
         validationMessage: 'Please describe your inquiry in at least 10 characters.',
@@ -708,31 +804,43 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       },
     },
     projectDetail: {
-      backToWorks: 'Back to works',
+      backToWorks: 'All works',
+      caseStudyLabel: 'Case Study',
       category: 'Discipline',
       client: 'Client',
       year: 'Year',
       role: 'Role',
       deliverables: 'Deliverables',
-      visitLink: 'Visit project',
+      visitLink: 'Open link',
+      contextHeading: 'Overview',
+      executionHeading: 'What was crafted',
       galleryHeading: 'Visual plates & frames',
       videoHeading: 'Film screening',
-      nextProject: 'Next project',
-      prevProject: 'Previous project',
-      discussSimilar: 'Discuss a similar project',
-      notFoundTitle: 'Project not found',
-      notFoundText: 'This project is unavailable or has not been published yet.',
-      fullscreenHint: 'Click to view fullscreen',
+      demoNotice:
+        'Temporary royalty-free demonstration clip (Pexels), included solely to showcase the portfolio video experience.',
+      nextProjectLabel: 'Next project',
+      discussSimilar: 'Have a similar project in mind?',
+      fullscreenHint: 'Click to expand',
       closeLightbox: 'Close fullscreen view',
     },
+    notFound: {
+      code: 'ERR // 404',
+      title: 'Signal out of frame.',
+      subtitle: 'The page you requested does not exist or has moved. Return home or explore the studio gallery.',
+      backHome: 'Back to home',
+      viewWorks: 'Explore works',
+    },
     footer: {
+      ctaEyebrow: 'Ready to launch your next project?',
+      ctaTitle: 'Let’s turn your idea into a lasting experience.',
+      ctaButton: 'Start a conversation',
       signature: 'Turning Ideas Into Experiences.',
       navigation: 'Navigation',
       directContact: 'Direct contact',
       legalNotice: 'Legal Notice',
       privacyPolicy: 'Privacy Policy',
       rights: 'KAIROS STUDIO — Joseph Kouamé. All rights reserved.',
-      backToTop: 'Back to top',
+      backToTop: 'Top',
     },
     legal: {
       backHome: 'Back to home',
@@ -742,54 +850,54 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         {
           heading: '1. Publisher',
           paragraphs: [
-            'This website is published by KAIROS STUDIO, led by its founder and creative director Joseph Kouamé.',
+            'This website is published by KAIROS STUDIO, represented by its founder and creative director Joseph Kouamé.',
             'Email: kuamejosephyakro452@gmail.com — WhatsApp: +225 07 89 50 17 05.',
           ],
         },
         {
-          heading: '2. Hosting',
+          heading: '2. Hosting & Infrastructure',
           paragraphs: [
-            'The public portfolio is hosted via GitHub Pages (GitHub, Inc.). Contact submission and private administration rely on Supabase infrastructure.',
+            'The static portfolio is hosted via GitHub Pages (GitHub, Inc.). Contact inquiries and private administration run on Supabase.',
           ],
         },
         {
           heading: '3. Intellectual Property',
           paragraphs: [
-            'Unless stated otherwise, all works featured on this portfolio (copy, graphic artworks, films, interfaces, the JK monogram, and the KAIROS STUDIO identity) remain the property of their author. Any unauthorized reproduction or distribution is prohibited.',
+            'The KAIROS STUDIO brand, JK monogram, code, copy, and original studio works remain the property of their author. Temporary demonstration clips are clearly flagged and sourced under royalty-free licenses.',
           ],
         },
         {
           heading: '4. Liability',
           paragraphs: [
-            'KAIROS STUDIO strives to keep published content accurate and reserves the right to update or refine it at any time without prior notice.',
+            'KAIROS STUDIO maintains this portfolio regularly and may update published works at any time.',
           ],
         },
       ],
       privacyTitle: 'Privacy Policy',
-      privacyIntro: 'KAIROS STUDIO values privacy and collects only the strict minimum required to answer your inquiries.',
+      privacyIntro: 'KAIROS STUDIO collects only the strict minimum required to answer your project inquiries.',
       privacySections: [
         {
           heading: '1. Data Collected',
           paragraphs: [
-            'No advertising trackers or public user accounts are used on this portfolio. Personal data is collected solely when you voluntarily submit the contact form (name, email address, optional phone number, discipline, and message).',
+            'No advertising trackers or public accounts are used. Only information voluntarily submitted via the contact form (name, email, optional phone, discipline, message) is stored.',
           ],
         },
         {
-          heading: '2. Purpose & Retention',
+          heading: '2. Use & Retention',
           paragraphs: [
-            'Submitted contact information is used exclusively to respond to your inquiry and discuss your project. It is never sold or shared with third parties and is retained only as long as needed to follow up.',
+            'Your contact details are used solely to respond to your inquiry and are never sold or shared with third parties.',
           ],
         },
         {
           heading: '3. Local Preferences',
           paragraphs: [
-            'Your language selection (French / English) and visual theme preference (light / dark) are stored locally in your browser (localStorage) for convenience.',
+            'Your language (FR/EN) and palette preference are stored locally in your browser (localStorage).',
           ],
         },
         {
-          heading: '4. Your Rights & Contact',
+          heading: '4. Contact & Deletion',
           paragraphs: [
-            'You may request access, correction, or deletion of your messages at any time by writing to kuamejosephyakro452@gmail.com.',
+            'To request access or deletion of your messages, email kuamejosephyakro452@gmail.com.',
           ],
         },
       ],

@@ -1,141 +1,185 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, Mail, MessageCircle } from 'lucide-react';
+import { ArrowUp, ArrowUpRight, Mail, MessageCircle } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
 import type { Locale } from '@/types/portfolio';
 import { MonogramJK } from './MonogramJK';
 import { Magnetic } from './Magnetic';
 
-interface FooterProps {
-  locale: Locale;
-}
+const WORDMARK = 'KAIROS STUDIO';
 
-export const Footer: React.FC<FooterProps> = ({ locale }) => {
+/**
+ * Pied de page spectaculaire :
+ * Grand wordmark interactif dont chaque lettre réagit individuellement au curseur + appel au contact.
+ */
+export const Footer: React.FC<{ locale: Locale }> = ({ locale }) => {
   const t = DICTIONARY[locale];
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   const legalPath = locale === 'fr' ? '/fr/mentions-legales' : '/en/legal-notice';
   const privacyPath = locale === 'fr' ? '/fr/confidentialite' : '/en/privacy';
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
-    <footer className="relative overflow-hidden border-t border-[#E8C877]/15 bg-[#0B0B0C] text-[#F4EEE3]">
-      <div className="gold-aura absolute -top-24 left-1/2 h-64 w-[42rem] -translate-x-1/2 opacity-50" />
+    <footer className="relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)]">
+      <div className="bg-mesh-ambient pointer-events-none absolute inset-0 opacity-50" />
 
-      <div className="relative mx-auto max-w-[1440px] px-5 pt-20 pb-12 sm:px-8 lg:px-12">
-        <div className="grid gap-12 border-b border-[#F4EEE3]/12 pb-16 lg:grid-cols-12">
-          {/* Marque */}
+      <div className="relative z-10 mx-auto max-w-[1440px] px-5 pt-20 pb-24 sm:px-8 sm:pb-16 lg:px-12">
+        {/* Bandeau CTA final */}
+        <div className="grid gap-8 border-b border-[var(--border-subtle)] pb-14 lg:grid-cols-12 lg:items-end">
+          <div className="lg:col-span-8">
+            <p className="font-mono-tech text-[11px] font-semibold tracking-[0.26em] uppercase text-[var(--accent-text)]">
+              {t.footer.ctaEyebrow}
+            </p>
+            <h2 className="font-display mt-3 text-[clamp(2rem,4.6vw,4rem)] font-bold leading-[1.02] tracking-[-0.025em]">
+              {t.footer.ctaTitle}
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
+            <Magnetic>
+              <a
+                href="https://wa.me/2250789501705"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-full bg-accent-gradient px-6 py-3.5 font-mono-tech text-xs font-bold tracking-[0.16em] uppercase text-[var(--accent-on-solid)]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>{t.footer.ctaButton}</span>
+                <ArrowUpRight className="h-4 w-4" />
+              </a>
+            </Magnetic>
+          </div>
+        </div>
+
+        {/* Colonnes infos */}
+        <div className="grid gap-10 py-14 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3.5">
-              <MonogramJK size={46} showFrame />
+              <MonogramJK size={44} showFrame />
               <div>
-                <p className="font-display text-2xl tracking-[0.22em] uppercase text-[#F4EEE3]">
+                <p className="font-display text-xl font-bold tracking-[0.16em] uppercase">
                   KAIROS STUDIO
                 </p>
-                <p className="mt-1 text-xs tracking-[0.18em] uppercase text-[#E8C877]">
+                <p className="font-serif-accent text-sm italic text-[var(--accent-text)]">
                   {t.footer.signature}
                 </p>
               </div>
             </div>
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-[#BDB5A8]">
-              {t.founder.name} — {t.founder.role}.
+            <p className="mt-4 text-sm text-[var(--text-muted)]">
+              {t.founder.name} — {t.founder.role}
             </p>
           </div>
 
-          {/* Navigation */}
           <div className="lg:col-span-3">
-            <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#E8C877]">
+            <p className="font-mono-tech text-[10px] font-semibold tracking-[0.24em] uppercase text-[var(--accent-text)]">
               {t.footer.navigation}
             </p>
-            <ul className="mt-5 space-y-3 text-sm text-[#BDB5A8]">
+            <ul className="mt-4 space-y-2.5 text-sm text-[var(--text-muted)]">
               <li>
-                <Link to={`/${locale}#services`} className="transition-colors hover:text-[#F4EEE3]">
+                <Link to={`/${locale}#services`} className="hover:text-[var(--text-primary)]">
                   {t.nav.services}
                 </Link>
               </li>
               <li>
-                <Link to={`/${locale}#works`} className="transition-colors hover:text-[#F4EEE3]">
+                <Link to={`/${locale}#works`} className="hover:text-[var(--text-primary)]">
                   {t.nav.works}
                 </Link>
               </li>
               <li>
-                <Link to={`/${locale}#founder`} className="transition-colors hover:text-[#F4EEE3]">
+                <Link to={`/${locale}#founder`} className="hover:text-[var(--text-primary)]">
                   {t.nav.founder}
                 </Link>
               </li>
               <li>
-                <Link to={`/${locale}#skills`} className="transition-colors hover:text-[#F4EEE3]">
-                  {t.nav.skills}
-                </Link>
-              </li>
-              <li>
-                <Link to={`/${locale}#contact`} className="transition-colors hover:text-[#F4EEE3]">
+                <Link to={`/${locale}#contact`} className="hover:text-[var(--text-primary)]">
                   {t.nav.contact}
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact direct (aucun lien de réseau social) */}
           <div className="lg:col-span-4">
-            <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#E8C877]">
+            <p className="font-mono-tech text-[10px] font-semibold tracking-[0.24em] uppercase text-[var(--accent-text)]">
               {t.footer.directContact}
             </p>
-            <div className="mt-5 space-y-3.5 text-sm">
+            <div className="mt-4 space-y-3 text-sm">
               <a
                 href="mailto:kuamejosephyakro452@gmail.com"
-                className="flex items-center gap-3 text-[#F4EEE3]/90 transition-colors hover:text-[#E8C877]"
+                className="flex items-center gap-3 text-[var(--text-primary)] hover:text-[var(--accent-text)]"
               >
-                <Mail className="h-4 w-4 text-[#E8C877]" />
+                <Mail className="h-4 w-4 text-[var(--accent-1)]" />
                 <span className="break-all">kuamejosephyakro452@gmail.com</span>
               </a>
               <a
                 href="https://wa.me/2250789501705"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 text-[#F4EEE3]/90 transition-colors hover:text-[#E8C877]"
+                className="flex items-center gap-3 text-[var(--text-primary)] hover:text-[var(--accent-text)]"
               >
-                <MessageCircle className="h-4 w-4 text-[#E8C877]" />
+                <MessageCircle className="h-4 w-4 text-[var(--accent-1)]" />
                 <span>+225 07 89 50 17 05</span>
               </a>
-            </div>
-
-            <div className="mt-8">
-              <Magnetic>
-                <button
-                  type="button"
-                  onClick={scrollToTop}
-                  className="inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-[#E8C877]/35 px-5 py-2.5 text-xs font-medium tracking-[0.18em] uppercase text-[#E8C877] transition-colors hover:border-[#E8C877] hover:bg-[#E8C877] hover:text-[#0B0B0C]"
-                >
-                  <ArrowUp className="h-3.5 w-3.5" />
-                  {t.footer.backToTop}
-                </button>
-              </Magnetic>
             </div>
           </div>
         </div>
 
-        {/* Wordmark éditorial monumental */}
+        {/* GRAND WORDMARK INTERACTIF QUI RÉAGIT LETTRE PAR LETTRE AU CURSEUR (groupé par mots, zéro coupure mid-word) */}
         <div
-          aria-hidden="true"
-          className="pointer-events-none select-none overflow-hidden py-8 text-center"
+          onMouseLeave={() => setHoveredIdx(null)}
+          className="select-none overflow-hidden border-y border-[var(--border-subtle)] py-6 text-center"
         >
-          <span className="font-display text-[clamp(3.2rem,13vw,11.5rem)] font-light leading-none tracking-[0.16em] uppercase text-[#F4EEE3]/[0.055]">
-            KAIROS STUDIO
-          </span>
+          <p
+            aria-label="KAIROS STUDIO"
+            className="font-display flex flex-wrap items-center justify-center gap-x-[0.36em] gap-y-2 text-[clamp(2.5rem,10vw,9.2rem)] font-extrabold leading-[0.92] tracking-[-0.03em]"
+          >
+            {WORDMARK.split(' ').map((word, wIdx) => {
+              const offset = wIdx === 0 ? 0 : WORDMARK.indexOf(' ') + 1;
+              return (
+                <span key={word} className="inline-flex whitespace-nowrap">
+                  {word.split('').map((char, cIdx) => {
+                    const idx = offset + cIdx;
+                    const dist = hoveredIdx === null ? 99 : Math.abs(hoveredIdx - idx);
+                    const lift = dist === 0 ? -14 : dist === 1 ? -7 : dist === 2 ? -2 : 0;
+                    const isLit = dist <= 1;
+
+                    return (
+                      <span
+                        key={`${word}-${cIdx}`}
+                        onMouseEnter={() => setHoveredIdx(idx)}
+                        className={`inline-block transition-all duration-300 ease-out will-change-transform ${
+                          isLit ? 'text-accent-gradient' : 'text-[var(--text-primary)]/90'
+                        }`}
+                        style={{
+                          transform: `translateY(${lift}px) scale(${dist === 0 ? 1.07 : 1})`,
+                        }}
+                      >
+                        {char}
+                      </span>
+                    );
+                  })}
+                </span>
+              );
+            })}
+          </p>
         </div>
 
-        {/* Bas de page légal */}
-        <div className="flex flex-col items-start justify-between gap-4 border-t border-[#F4EEE3]/10 pt-6 text-xs text-[#BDB5A8] sm:flex-row sm:items-center">
+        {/* Bas légal + retour haut */}
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 font-mono-tech text-[11px] text-[var(--text-muted)] sm:flex-row sm:items-center">
           <p>{t.footer.rights}</p>
           <div className="flex flex-wrap items-center gap-6">
-            <Link to={legalPath} className="transition-colors hover:text-[#E8C877]">
+            <Link to={legalPath} className="hover:text-[var(--text-primary)]">
               {t.footer.legalNotice}
             </Link>
-            <Link to={privacyPath} className="transition-colors hover:text-[#E8C877]">
+            <Link to={privacyPath} className="hover:text-[var(--text-primary)]">
               {t.footer.privacyPolicy}
             </Link>
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border-subtle)] px-3.5 py-1.5 uppercase tracking-[0.16em] text-[var(--text-primary)] hover:border-[var(--accent-1)]"
+            >
+              <ArrowUp className="h-3 w-3 text-[var(--accent-1)]" />
+              <span>{t.footer.backToTop}</span>
+            </button>
           </div>
         </div>
       </div>

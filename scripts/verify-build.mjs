@@ -37,6 +37,18 @@ async function main() {
     'en/projects/digital-creativity-2026/index.html',
     'fr/projets/soiree-de-louange-une-nuit-dans-sa-presence/index.html',
     'en/projects/soiree-de-louange-une-nuit-dans-sa-presence/index.html',
+    'fr/projets/brand-guidelines-identity-manual/index.html',
+    'en/projects/brand-guidelines-identity-manual/index.html',
+    'fr/projets/natur-branding-packaging/index.html',
+    'en/projects/natur-branding-packaging/index.html',
+    'fr/projets/solution-digitale-automatisation/index.html',
+    'en/projects/solution-digitale-automatisation/index.html',
+    'fr/projets/ecommerce-training-session-web/index.html',
+    'en/projects/ecommerce-training-session-web/index.html',
+    'fr/projets/campagne-visuelle-gourmet/index.html',
+    'en/projects/campagne-visuelle-gourmet/index.html',
+    'fr/projets/demo-video-architecture-lumiere/index.html',
+    'en/projects/demo-video-architecture-lumiere/index.html',
     'fr/mentions-legales/index.html',
     'en/legal-notice/index.html',
     'fr/confidentialite/index.html',
@@ -80,8 +92,8 @@ async function main() {
       console.error(`[FAIL] JSON-LD manquant dans dist/${rel}`);
       failed = true;
     }
-    if (/À VALIDER|A VALIDER|TODO|LOREM IPSUM/i.test(content)) {
-      console.error(`[FAIL] Texte provisoire détecté dans dist/${rel}`);
+    if (/À VALIDER|A VALIDER|TODO|LOREM IPSUM|moment opportun|grec ancien/i.test(content)) {
+      console.error(`[FAIL] Texte provisoire ou étymologie interdite détectée dans dist/${rel}`);
       failed = true;
     }
   }

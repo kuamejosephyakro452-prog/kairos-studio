@@ -11,9 +11,6 @@ export interface ContactPayload {
   locale: Locale;
 }
 
-/**
- * Normalise un enregistrement venant de Supabase vers le type Project du front.
- */
 function normalizeRow(row: Record<string, unknown>): Project {
   const gallery = Array.isArray(row.gallery) ? row.gallery : [];
   return {
@@ -23,6 +20,8 @@ function normalizeRow(row: Record<string, unknown>): Project {
     status: (row.status as Project['status']) || 'draft',
     featured: Boolean(row.featured),
     sort_order: Number(row.sort_order ?? 0),
+    origine_non_verifiee: Boolean(row.origine_non_verifiee),
+    demo: Boolean(row.demo),
     title_fr: String(row.title_fr || ''),
     title_en: String(row.title_en || ''),
     subtitle_fr: String(row.subtitle_fr || ''),
@@ -52,18 +51,12 @@ function normalizeRow(row: Record<string, unknown>): Project {
   };
 }
 
-/**
- * Retourne immédiatement l'instantané statique publié (garantie de résilience si Supabase est en pause).
- */
 export function getStaticPublishedProjects(): Project[] {
   return PUBLISHED_PROJECTS_SNAPSHOT.filter((p) => p.status === 'published').sort(
     (a, b) => a.sort_order - b.sort_order
   );
 }
 
-/**
- * Récupère les projets publiés depuis Supabase avec repli automatique sur l'instantané statique.
- */
 export async function fetchPublishedProjects(): Promise<{
   projects: Project[];
   source: 'supabase' | 'snapshot';
@@ -94,7 +87,6 @@ export async function fetchPublishedProjects(): Promise<{
 
     const remoteProjects = data.map((row) => normalizeRow(row as Record<string, unknown>));
 
-    // Réassocie les assetId locaux si le projet correspond à un média statique optimisé WebP/AVIF
     const snapshotBySlug = new Map(fallback.map((p) => [p.slug, p]));
     const enriched = remoteProjects.map((proj) => {
       const local = snapshotBySlug.get(proj.slug);
@@ -115,10 +107,6 @@ export async function fetchPublishedProjects(): Promise<{
   }
 }
 
-/**
- * Enregistre un message de contact dans Supabase.
- * Renvoie { ok: false } si Supabase est indisponible afin de déclencher le repli WhatsApp.
- */
 export async function submitContactMessage(
   payload: ContactPayload
 ): Promise<{ ok: boolean; error?: string }> {
@@ -147,7 +135,7 @@ export async function submitContactMessage(
 }
 
 /* ============================================================================
- * FONCTIONS D'ADMINISTRATION (Protégées par Auth + RLS Supabase)
+ * ADMINISTRATION (Auth + RLS Supabase)
  * ============================================================================ */
 
 export async function checkIsAdminUser(): Promise<{
@@ -193,7 +181,9 @@ export async function fetchAllProjectsAdmin(): Promise<Project[]> {
   return (data || []).map((row) => normalizeRow(row as Record<string, unknown>));
 }
 
-export async function saveProjectAdmin(project: Omit<Project, 'id'> & { id?: string }): Promise<Project> {
+export async function saveProjectAdmin(
+  project: Omit<Project, 'id'> & { id?: string }
+): Promise<Project> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase non configuré.');
 
@@ -203,6 +193,8 @@ export async function saveProjectAdmin(project: Omit<Project, 'id'> & { id?: str
     status: project.status,
     featured: project.featured,
     sort_order: project.sort_order,
+    origine_non_verifiee: Boolean(project.origine_non_verifiee),
+    demo: Boolean(project.demo),
     title_fr: project.title_fr.trim(),
     title_en: project.title_en.trim(),
     subtitle_fr: project.subtitle_fr.trim(),
@@ -255,6 +247,38 @@ export async function deleteProjectAdmin(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Supprime en un clic TOUS les projets marqués demo = true en base
+ * ainsi que les éventuels fichiers présents dans demo/ sur Supabase Storage.
+ */
+export async function deleteAllDemoProjectsAdmin(): Promise<number> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Supabase non configuré.');
+
+  const { data: deletedRows, error } = await client
+    .from('projects')
+    .delete()
+    .eq('demo', true)
+    .select('id');
+  if (error) throw error;
+
+  // Purge optionnelle des fichiers du dossier demo/ dans Supabase Storage
+  try {
+    const { data: files } = await client.storage.from('portfolio-media').list('demo', {
+      limit: 100,
+    });
+    if (files && files.length > 0) {
+      await client.storage
+        .from('portfolio-media')
+        .remove(files.map((f) => `demo/${f.name}`));
+    }
+  } catch {
+    // Non bloquant si dossier demo/ vide
+  }
+
+  return deletedRows?.length || 0;
+}
+
 export async function updateProjectOrderAdmin(orderedIds: string[]): Promise<void> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase non configuré.');
@@ -267,7 +291,7 @@ export async function updateProjectOrderAdmin(orderedIds: string[]): Promise<voi
 
 export async function uploadMediaAdmin(
   file: File,
-  folder: 'published' | 'drafts' = 'published'
+  folder: 'published' | 'drafts' | 'demo' = 'published'
 ): Promise<{ publicUrl: string; path: string }> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase non configuré.');

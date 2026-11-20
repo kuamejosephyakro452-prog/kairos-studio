@@ -1,52 +1,81 @@
-# DECISIONS — KAIROS STUDIO
+# DECISIONS — KAIROS STUDIO (Phase 2 — Refonte Frontend Complète)
 
-Journal des décisions créatives, éditoriales, techniques et d'architecture prises de manière autonome.
+Journal des décisions créatives, typographiques, chromatiques, techniques et éditoriales prises de manière autonome.
 
 ---
 
-## 1. Architecture & Stack Technique
-- **Framework** : **React 19 + TypeScript + Vite 6** avec routage complet (`react-router-dom`) et **script de prérendu statique (SSG)** en post-build générant un `index.html` dédié pour chaque route publique (`/`, `/fr`, `/en`, fiches projets FR/EN, pages légales FR/EN) + `404.html` de secours pour GitHub Pages.
-  - *Raison* : Permet à la fois un chargement instantané, un SEO complet (balises `<title>`, `description`, `hreflang`, Open Graph, JSON-LD présents dans le HTML statique), le rechargement direct sur toute URL profonde sur GitHub Pages, et une SPA riche pour l'espace d'administration (`/admin`).
-- **Base path GitHub Pages** : Configurable via `VITE_BASE_PATH` (défaut `/kairos-studio/`), compatible avec un futur passage sur domaine personnalisé (`/`).
-- **Animations & Smooth Scroll** : **GSAP + ScrollTrigger** + **Lenis** (activé sur desktop hors `prefers-reduced-motion`). Préchargeur élégant dessinant le monogramme vectoriel **JK** en traits dorés avant révélation fluide (skippable / instantané si `prefers-reduced-motion`).
-- **Effet WebGL maîtrisé** : Shader GLSL natif léger (< 3 Ko, sans dépendance Three.js lourde) sur `<canvas>` dans le hero, rendu en différé (`requestIdleCallback`), désactivé automatiquement sur mobile basse capacité ou `prefers-reduced-motion`. Assure un rendu cinématographique d'aurore dorée/encre tout en préservant un score Lighthouse Performance ≥ 85.
-- **Résilience Supabase (Plan gratuit / Auto-pause)** :
-  - Instantané statique `src/data/projects.snapshot.ts` (généré/mis à jour au build à partir de Supabase si disponible, ou depuis le catalogue initial vérifié).
-  - Le site public affiche instantanément les projets depuis l'instantané statique puis fusionne silencieusement les mises à jour en direct depuis Supabase (`projects` où `status = 'published'`). Ainsi le portfolio reste 100 % fonctionnel même si Supabase est en pause ou hors-ligne.
-  - Workflow GitHub Actions hebdomadaire (`.github/workflows/keep-supabase-alive.yml`) pour envoyer un ping léger à l'API REST publique afin d'éviter la mise en pause automatique.
+## 1. Concept Directeur — « Du Signal Brut à l’Expérience Vivante »
+- **Point de départ** : KAIROS est strictement un nom de marque (zéro référence à une quelconque étymologie dans les textes, animations, métadonnées ou transitions).
+- **Idée directrice (voir `CONCEPT.md`)** : Traduire la signature *« Turning Ideas Into Experiences. »* et la convergence des **5 disciplines** (Design graphique · Production audiovisuelle · Communication digitale · Solutions numériques / TIC · Création de sites web) en une métamorphose continue :
+  - **Signal** (Préchargeur & Hero) : tracé vectoriel du monogramme **JK**, shader GLSL liquide réactif au curseur, révélation cinétique du titre et proposition de valeur orientée client.
+  - **Forme** (Manifeste & Scène 5 Disciplines) : illumination mot-à-mot au scroll, puis index monumental interactif des 5 métiers qui bascule dynamiquement la couleur ambiante et la scène visuelle sticky.
+  - **Expérience** (Galerie multi-vues, Fondateur & Contact) : 3 modes d’exploration (**Galerie horizontale épinglée**, **Index liste avec traînée visuelle au curseur**, **Canevas libre glissable « Explorer »**), fiches projets structurées plein écran et conversion fluide (Formulaire Supabase + WhatsApp flottant + E-mail direct).
+- **Zéro invention** : Aucune année, aucun client, aucun chiffre, aucun témoignage, aucun lien de réseau social, aucun portrait factice.
 
-## 2. Direction Artistique — « Editorial & Luxury »
-- **Fil conducteur narratif (Kairos)** : Le *Kairos* — l'instant juste où une idée bascule en expérience mémorable. Traduit visuellement par des révélations mesurées, des filets dorés précis, des numérotations éditoriales (`01` → `05`), et un rythme contrasté alternant **Ivoires chauds (`#F4EEE3` / `#E6DACA`)** et **Noirs d'encre (`#0B0B0C`)**, ponctués d'un **Or brossé (`#B8913F` → `#E8C877`)**.
-- **Thème clair / sombre** : Le design par défaut repose sur une alternance éditoriale maîtrisée (Hero cinéma sombre → Manifeste & Services ivoire → Galerie & Fondateur noir encre → Compétences & Contact ivoire/sable) et offre un sélecteur de thème complet (Éditorial Clair / Nocturne Sombre) mémorisé dans `localStorage`, tout en respectant un contraste AA partout.
-- **Typographies libres** :
-  - Display / Titres : **Cormorant Garamond** (italiques sculpturaux et graisses 300/400/500/600) + **Instrument Serif** pour les accents éditoriaux.
-  - Corps & Interface : **Manrope** (lisibilité exemplaire à petite et moyenne taille, précision géométrique contemporaine).
-- **Zéro invention** : Aucune année, aucun client, aucun chiffre, aucun témoignage, aucun lien social ni numéro d'immatriculation inventé.
+---
 
-## 3. Sélection des Créations Locales (Règle de Lecture Seule)
-- Dossiers scannés en lecture seule absolue : `D:\MON STUDIO` et `D:\MON_STUDIO_VIDEO` (ainsi que vérification du workspace local).
-- **Publiés sur le site public (3 projets authentiques, haute qualité, 0 doublon)** :
-  1. **Pub Nexora Tech** (`Production audiovisuelle`) — Film publicitaire Full HD 16:9 (compressé MP4/WebM pour le web + poster + extraits HD + showreel Hero muet 12s).
-  2. **Digital Creativity 2026** (`Design graphique`) — Affiche événementielle A3 300 DPI + déclinaison Instagram 4:5 + emblème vectoriel DC//26.
-  3. **Soirée de Louange — Une Nuit dans Sa Présence** (`Communication digitale`) — Campagne visuelle réseaux sociaux en double format (Carré 1:1 + Statut WhatsApp 9:16 avec zones de sécurité).
-- **Placés en BROUILLON dans l'admin (non visibles sur le site public, modifiables/publiables par Joseph)** :
-  1. **Soirée Talents & Quiz Biblique** — Affiche A4 de grande qualité présente dans le workspace racine mais hors `D:\MON STUDIO` et comportant une mention « Date : À préciser » sur l'image. Placée en brouillon par rigueur éditoriale.
-  2. **Packshot & Identité Visuelle Nexora** — Planches de direction visuelle (logo + packshot) déjà incluses en galerie de la fiche vidéo, disponibles séparément en brouillon si Joseph souhaite les exposer comme projet Design Graphique indépendant.
-  3. **Emblème Vectoriel DC//26** — Déclinaison logotype vectorielle issue du projet Digital Creativity 2026, disponible en brouillon.
-- **Écartés** : Toutes les bibliothèques tierces (`02_RESSOURCES`, `04_TEMPLATES`, `07_DOCUMENTATION`, `01_RESSOURCES_GRAPHIQUES`, `02_RESSOURCES_VIDEO`, `03_RESSOURCES_AUDIO`, `04_TEMPLATES`, `08_REFERENCES_INSPIRATION`, `09_OUTILS_ET_SCRIPTS`) et tous les fichiers dupliqués (triplons vidéo, doublons workspace).
+## 2. Direction Chromatique — Comparaison des 3 Palettes & Choix Final
+Les trois directions imposées ont été implémentées en **tokens CSS complets** (`src/styles/index.css` : `--bg-primary`, `--bg-elevated`, `--bg-card`, `--text-primary`, `--text-muted`, `--accent-1`, `--accent-2`, `--accent-3`, `--accent-gradient`, `--accent-text`, `--accent-on-solid`, `--glow-primary`, `--border-subtle`) et capturées sur la vraie page d’accueil (Cycle 1) :
 
-## 4. Pipeline Médias & Optimisation Poids
-- **Images** : Générées par script reproductible (`scripts/process-media.mjs` avec `sharp`) en **AVIF + WebP** (fallback JPG/WebP) dans 3 largeurs responsives (`480w`, `960w`, `1600w`) + miniatures.
-- **Vidéos** : Encodées via FFmpeg (`imageio_ffmpeg`) à partir des copies en lecture seule :
-  - `hero-showreel.mp4` (H.264 720p, muet, ~12 s, < 2.5 Mo) + `hero-showreel.webm` (VP9) + `hero-showreel-poster.webp/.avif`.
-  - `pub-nexora-tech.mp4` (H.264 720p avec audio AAC 128k, ~120 s, < 14 Mo) + `pub-nexora-tech.webm` (< 12 Mo) + poster HD + 4 stills HD.
-- Respect strict des limites GitHub Pages (site total très largement inférieur à 100 Mo, aucun fichier supérieur à 15 Mo) et du quota gratuit Supabase (~1 Go).
+| Palette | Tokens clés | Émotion & Constat sur capture réelle | Verdict |
+| :--- | :--- | :--- | :--- |
+| **B. « Braise »** *(retenue par défaut)* | Fond `#07070B`, gradient `#FF6B00 → #E6007E → #5B2EFF`, texte ivoire `#F6F1EA` | Contraste immédiat, profondeur cinéma qui sublime aussi bien les visuels sombres (Nexora, Brand Guidelines) que les pièces colorées (Natur, Digital Creativity, Louange). Lueur WebGL liquide ultra-vivante sans écraser la lisibilité. | **Retenue par défaut** |
+| **A. « Indigo & Corail »** | Fond `#0A0E27`, corail `#FF5A3C`, ambre `#FFB347`, ultramarine `#3347FF`, texte `#FFF3E4` | Très énergétique et lumineuse, excellente lueur chaude, mais le fond bleu nuit teinte légèrement les créations à dominantes émeraude/vert-lime (Louange, Solution). | Conservée via sélecteur (`?palette=indigo`) |
+| **C. « Encre & Vermillon »** | Papier chaud `#F3EEE6`, encre `#0F0F12`, vermillon `#E8392B`, vert-bleu `#0F4C4A` | Très forte autorité éditoriale en plein jour et lisibilité exemplaire ; moins spectaculaire sur le Hero WebGL + vidéo sombre que *Braise*. | Conservée via sélecteur (`?palette=encre`) |
 
-## 5. Sécurité & Administration Supabase
-- Tables : `projects`, `project_media`, `contact_messages`, `admin_profiles` (ou contrôle strict via `auth.uid()` et rôle admin unique).
-- Inscriptions publiques désactivées dans Supabase Auth ; un seul compte administrateur (`kuamejosephyakro452@gmail.com`).
-- RLS activé sur **toutes** les tables et **tous** les buckets Storage (`portfolio-media`) :
-  - `projects` & `project_media` : `SELECT` public limité à `status = 'published'` ; `INSERT/UPDATE/DELETE` et `SELECT` complet (incluant `draft`) réservés à l'utilisateur authentifié administrateur.
-  - `contact_messages` : `INSERT` autorisé au public (avec validation stricte + honeypot + rate-limit applicatif) ; `SELECT/UPDATE/DELETE` réservés à l'administrateur authentifié.
-  - Bucket `portfolio-media` : lecture publique des fichiers publiés ; écriture/suppression réservées à l'administrateur authentifié.
-- Route `/admin` marquée `<meta name="robots" content="noindex, nofollow">` et exclue de `sitemap.xml`.
+- **Accessibilité (AA minimum)** : Lors du Cycle 1, le contraste du texte sur les boutons dégradés a été renforcé en forçant `--accent-on-solid: #FFFFFF` sur l’ensemble du gradient, et le contraste des boutons inactifs du sélecteur de palette a été relevé au Cycle 3 (`opacity 80%`).
+- **Sélecteur temporaire de palettes** : Conservé discrètement en bas à gauche (`PaletteSwitcher.tsx`) + activable par URL (`?palette=braise`, `?palette=indigo`, `?palette=encre`) afin que Joseph puisse comparer librement en ligne. Instructions de retrait en 2 lignes documentées dans `README.md`.
+
+---
+
+## 3. Typographie — Polices Variables Auto-Hébergées & Choix du Duo
+Zéro appel Google Fonts externe (confidentialité + performance LCP). Trois directions display ont été comparées sur captures réelles (Cycle 1) :
+1. **Syne Variable** (géométrique avant-gardiste, personnalité immédiate de studio primé) — **Retenue pour le Display**.
+2. **Bricolage Grotesque Variable** (très chaleureuse et éditoriale, mais silhouette légèrement plus classique/institutionnelle que Syne).
+3. **Fraunces Variable** (serif optique très expressive — excellente en touche italique contrastée, trop chargée en display intégral).
+
+**Système final retenu** (et polices non retenues purgées du bundle) :
+- **Titres Display** : `@fontsource-variable/syne` (graisses 600–800, interlignage serré `0.92–0.98`, tracking négatif `-0.03em`).
+- **Accents éditoriaux ponctuels** : `@fontsource-variable/fraunces` (italiques expressifs sur les sous-titres/accroches).
+- **Corps & UI** : `@fontsource-variable/space-grotesk` (géométrie contemporaine, lisibilité irréprochable sur mobile).
+- **Index, coordonnées & métadonnées** : `@fontsource-variable/jetbrains-mono` (numérotations `01`, `X/Y`, étiquettes techniques).
+
+---
+
+## 4. Ressources Locales, Contenus `origine_non_verifiee` & Vidéos `demo`
+- **Lecture seule absolue** sur `D:\MON STUDIO` et `D:\MON_STUDIO_VIDEO` (aucun original modifié ou déplacé).
+- **Catalogue publié (11 réalisations couvrant les 5 catégories) + 2 brouillons privés** :
+  - **3 créations vérifiées** (`origine_non_verifiee = false, demo = false`) : *Pub Nexora Tech*, *Digital Creativity 2026*, *Soirée de Louange — Une Nuit dans Sa Présence*.
+  - **5 réalisations ajoutées depuis `D:\MON STUDIO\04_TEMPLATES`** (`origine_non_verifiee = true`, recadrées sans bordures de présentation, converties AVIF + WebP responsives) pour illustrer les 5 disciplines : *Brand Guidelines*, *Natur Packaging*, *Someone Somewhere Needs Your Solution* (Solutions numériques / TIC), *E-Commerce Training Session* (Création de sites web), *Delicious Burger — Campagne Food*. Filtrables en un clic dans `/admin` via le filtre **« Origine non vérifiée »**.
+  - **3 vidéos de démonstration temporaires** (`demo = true`, libres de droits Pexels License issues de `D:\MON_STUDIO_VIDEO\02_RESSOURCES_VIDEO\B_Roll\`, documentées dans `DEMO_ASSETS.md`, stockées dans `public/media/demo/`, titres neutres sans aucune invention). Supprimables **globalement en un clic** depuis `/admin` via **« Supprimer tout le contenu de démonstration »**.
+
+---
+
+## 5. Boucles de Qualité Visuelle (3 Cycles Complets)
+- **Audit initial (`AUDIT_FRONTEND.md`)** : captures de la V1 conservées dans `docs/avant-apres/avant_*.png`.
+- **Cycle 1 (Palettes + Polices + Hero)** :
+  - Corrigé le chevauchement potentiel entre la barre basse du Hero et les pilules flottantes (`pb-20 sm:pb-24` + repère de scroll centré).
+  - Renforcé le contraste texte sur dégradé CTA (`--accent-on-solid: #FFFFFF`).
+  - Purgé les packages de polices non retenues (`bricolage-grotesque`, `plus-jakarta-sans`) pour alléger le bundle.
+- **Cycle 2 (QA Interactif complet Desktop 1440px & Mobile 390px)** :
+  - Identifié 4 défauts majeurs et 5 ajustements : synchronisation Supabase (3 → 11 projets), comportement `ScrollTrigger` pinned horizontal lors du chargement asynchrone, dégagement de la barre latérale sticky sur la fiche projet, coupure de mot du wordmark géant en pied de page sur mobile (`KAIROS S / TUDIO`), chevauchement des glyphes `404` avec le H1, et traduction des `aria-label` en anglais.
+- **Cycle 3 & 4 (Correctifs de fond, Sync Live Supabase & Re-vérification complète)** :
+  - Migration Phase 2 (`origine_non_verifiee`, `demo`, policy Storage `demo/%`) + upsert des 13 projets appliqués en direct sur Supabase `lpenmdantrekfhyehbyp` (vérification `anon` : 11 publiés sur 5 catégories, 0 brouillon).
+  - **Fix racine `.page-transition`** (`src/styles/index.css`) : retrait du `transform: translateY(0)` maintenu par `animation-fill-mode: both`, qui créait un bloc englobant perturbant `position: fixed` et `position: sticky`.
+  - **`WorksShowcase.tsx` (Galerie horizontale)** : passage à une architecture **CSS `position: sticky` + GSAP ScrollTrigger `scrub`** (sans `pin: true` / `.pin-spacer`), garantissant 0 disparition DOM sous React 19 et un défilement horizontal fluide sur les 11 créations.
+  - **`FullscreenNav.tsx` & `PaletteSwitcher.tsx`** : retrait des `transition-all` / `color-mix` lents lors du basculement de palette ; pilule active en dégradé signature (`bg-accent-gradient`) à contraste garanti sur *Braise*, *Indigo* et *Encre* (en-tête clair lisible en mode *Encre*).
+  - `ProjectDetailPage.tsx` : `lg:sticky lg:top-32` sous la navigation fixe.
+  - `Footer.tsx` : groupement par mot (`inline-flex whitespace-nowrap`) empêchant toute coupure interne de `KAIROS` ou `STUDIO` sur mobile.
+  - `NotFoundPage.tsx` : `404` en `font-mono-tech text-accent-gradient` + marge `mt-3`.
+  - `PaletteSwitcher.tsx` & `WorksShowcase.tsx` : `aria-label` et `title` 100 % traduits FR/EN.
+  - `ServicesStage.tsx` : support `onFocus` clavier aligné avec le survol/clic.
+
+---
+
+## 6. Architecture, SEO & Sécurité (Préservés & Renforcés)
+- **Stack** : React 19 + TypeScript + Vite 6 + Tailwind CSS v4 + GSAP/ScrollTrigger + Lenis + Shader WebGL GLSL natif (< 3 Ko, chargement différé `requestIdleCallback`, repli CSS sur mobile et `prefers-reduced-motion`).
+- **Prérendu statique GitHub Pages** : `scripts/prerender.mjs` génère un `index.html` dédié par route publique (toutes les fiches projets FR/EN, accueil FR/EN, pages légales) + `404.html` SPA + `sitemap.xml` (excluant `/admin`) + `robots.txt`.
+- **Supabase (`lpenmdantrekfhyehbyp`, région `eu-west-1`)** :
+  - Inscriptions publiques désactivées (`disable_signup: true`), admin unique `kuamejosephyakro452@gmail.com` dans `public.admin_users`.
+  - RLS strict sur `projects`, `contact_messages`, `admin_users` et bucket `portfolio-media`.
+  - Maintien en vie automatique via `.github/workflows/keep-supabase-alive.yml` + repli instantané sur `src/data/projects.snapshot.ts`.

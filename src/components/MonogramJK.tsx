@@ -13,7 +13,7 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
   size = 44,
   animated = false,
   showFrame = true,
-  label = 'Monogramme JK — Joseph Kouamé, KAIROS STUDIO',
+  label = 'JK — Joseph Kouamé, KAIROS STUDIO',
 }) => {
   const gradId = React.useId();
 
@@ -29,10 +29,10 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
       aria-label={label}
     >
       <defs>
-        <linearGradient id={gradId} x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#F0D78C" />
-          <stop offset="50%" stopColor="#B8913F" />
-          <stop offset="100%" stopColor="#E8C877" />
+        <linearGradient id={gradId} x1="6" y1="6" x2="74" y2="74" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" style={{ stopColor: 'var(--accent-1)' }} />
+          <stop offset="55%" style={{ stopColor: 'var(--accent-2)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--accent-3)' }} />
         </linearGradient>
       </defs>
 
@@ -42,45 +42,43 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
           y="4"
           width="72"
           height="72"
-          rx="12"
+          rx="16"
           stroke={`url(#${gradId})`}
-          strokeWidth="1.15"
-          strokeOpacity="0.65"
+          strokeWidth="1.5"
+          strokeOpacity="0.8"
           className={animated ? 'jk-stroke jk-frame' : undefined}
         />
       )}
 
-      {/* Trait vertical et courbe du J */}
+      {/* Lettre J géométrique sculptée */}
       <path
-        d="M31 20V47.5C31 54.4 26.6 58.8 20.5 58.8C17.6 58.8 15.2 57.9 13.6 56.6"
+        d="M31 19V47.5C31 54.6 26.4 59 20.2 59C17.2 59 14.8 58 13.2 56.5"
         stroke={`url(#${gradId})`}
-        strokeWidth="2.4"
+        strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
         className={animated ? 'jk-stroke jk-j' : undefined}
       />
-
-      {/* Petit empattement supérieur du J */}
       <path
-        d="M25.5 20H36.5"
+        d="M25 19H37"
         stroke={`url(#${gradId})`}
-        strokeWidth="1.6"
+        strokeWidth="2.2"
         strokeLinecap="round"
         className={animated ? 'jk-stroke jk-serif' : undefined}
       />
 
-      {/* Hampe et diagonales du K */}
+      {/* Lettre K dynamique */}
       <path
-        d="M44 20V58.5"
+        d="M44.5 19V59"
         stroke={`url(#${gradId})`}
-        strokeWidth="2.4"
+        strokeWidth="3"
         strokeLinecap="round"
         className={animated ? 'jk-stroke jk-k1' : undefined}
       />
       <path
-        d="M62.5 20L44 40.5L64 58.5"
+        d="M64 19L45 40.2L65 59"
         stroke={`url(#${gradId})`}
-        strokeWidth="2.4"
+        strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
         className={animated ? 'jk-stroke jk-k2' : undefined}

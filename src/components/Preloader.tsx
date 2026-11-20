@@ -6,7 +6,7 @@ interface PreloaderProps {
   caption: string;
 }
 
-const SESSION_KEY = 'kairos-preloader-seen';
+const SESSION_KEY = 'kairos-v2-preloader-seen';
 
 export const Preloader: React.FC<PreloaderProps> = ({ caption }) => {
   const [visible, setVisible] = useState<boolean>(() => {
@@ -19,11 +19,13 @@ export const Preloader: React.FC<PreloaderProps> = ({ caption }) => {
     }
   });
 
+  const [count, setCount] = useState(0);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!visible || !overlayRef.current) return;
 
+    const counterObj = { val: 0 };
     const ctx = gsap.context(() => {
       const paths = overlayRef.current!.querySelectorAll<SVGGeometryElement>('.jk-stroke');
       paths.forEach((p) => {
@@ -44,30 +46,34 @@ export const Preloader: React.FC<PreloaderProps> = ({ caption }) => {
 
       tl.to(paths, {
         strokeDashoffset: 0,
-        duration: 0.95,
+        duration: 0.9,
         stagger: 0.08,
         ease: 'power3.inOut',
       })
-        .fromTo(
-          '.preloader-wordmark',
-          { y: 14, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
-          '-=0.35'
-        )
         .to(
-          '.preloader-line',
-          { scaleX: 1, duration: 0.45, ease: 'power2.inOut' },
-          '-=0.3'
+          counterObj,
+          {
+            val: 100,
+            duration: 1.05,
+            ease: 'power2.inOut',
+            onUpdate: () => setCount(Math.round(counterObj.val)),
+          },
+          0
+        )
+        .fromTo(
+          '.preloader-caption',
+          { y: 14, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' },
+          0.35
         )
         .to(overlayRef.current, {
           clipPath: 'inset(0 0 100% 0)',
           duration: 0.65,
-          delay: 0.12,
+          delay: 0.1,
           ease: 'power4.inOut',
         });
     }, overlayRef);
 
-    // Sécurité absolue : ne jamais bloquer le site plus de 2,4 s
     const failsafe = window.setTimeout(() => {
       try {
         sessionStorage.setItem(SESSION_KEY, '1');
@@ -75,7 +81,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ caption }) => {
         // ignore
       }
       setVisible(false);
-    }, 2400);
+    }, 2200);
 
     return () => {
       window.clearTimeout(failsafe);
@@ -89,21 +95,33 @@ export const Preloader: React.FC<PreloaderProps> = ({ caption }) => {
     <div
       ref={overlayRef}
       aria-hidden="true"
-      className="fixed inset-0 z-[95] flex flex-col items-center justify-center bg-[#0B0B0C] text-[#F4EEE3]"
+      className="fixed inset-0 z-[95] flex flex-col justify-between bg-[var(--bg-primary)] p-6 text-[var(--text-primary)] sm:p-10"
       style={{ clipPath: 'inset(0 0 0% 0)' }}
     >
-      <div className="gold-aura absolute inset-0 opacity-70" />
-      <div className="relative flex flex-col items-center gap-6 px-6 text-center">
-        <MonogramJK size={96} animated showFrame />
-        <div className="preloader-wordmark opacity-0">
-          <p className="font-display text-2xl tracking-[0.28em] uppercase text-[#F4EEE3] sm:text-3xl">
-            KAIROS STUDIO
-          </p>
-          <p className="mt-1.5 text-[11px] tracking-[0.26em] uppercase text-[#E8C877]/80">
-            {caption}
-          </p>
+      <div className="bg-mesh-ambient pointer-events-none absolute inset-0 opacity-75" />
+
+      <div className="relative flex items-center justify-between font-mono-tech text-[11px] tracking-[0.26em] uppercase text-[var(--text-muted)]">
+        <span>KAIROS STUDIO</span>
+        <span>JK // PORTFOLIO</span>
+      </div>
+
+      <div className="relative flex flex-col items-center gap-6 text-center">
+        <MonogramJK size={108} animated showFrame />
+        <p className="preloader-caption font-display text-xl font-semibold tracking-[0.14em] uppercase opacity-0 sm:text-2xl">
+          {caption}
+        </p>
+      </div>
+
+      <div className="relative flex items-end justify-between border-t border-[var(--border-subtle)] pt-5">
+        <div className="h-1 w-44 overflow-hidden rounded-full bg-[var(--border-subtle)] sm:w-64">
+          <div
+            className="bg-accent-gradient h-full transition-all duration-75"
+            style={{ width: `${count}%` }}
+          />
         </div>
-        <div className="preloader-line h-px w-40 origin-left scale-x-0 bg-gradient-to-r from-transparent via-[#E8C877] to-transparent" />
+        <span className="font-mono-tech text-3xl font-semibold tracking-tight text-accent-gradient sm:text-5xl">
+          {String(count).padStart(3, '0')}
+        </span>
       </div>
     </div>
   );

@@ -2,19 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DICTIONARY } from '@/i18n/translations';
 import { HeroSection } from '@/components/HeroSection';
-import { ServicesShowcase } from '@/components/ServicesShowcase';
-import { WorksGallery } from '@/components/WorksGallery';
-import { FounderAndSkillsSection } from '@/components/FounderAndSkillsSection';
+import { ManifestoSection } from '@/components/ManifestoSection';
+import { ServicesStage } from '@/components/ServicesStage';
+import { WorksShowcase } from '@/components/WorksShowcase';
+import { FounderStage } from '@/components/FounderStage';
+import { KineticMarquee } from '@/components/KineticMarquee';
 import { ContactSection } from '@/components/ContactSection';
 import { SeoHead } from '@/components/SeoHead';
-import type { Locale, Project, ProjectCategory } from '@/types/portfolio';
+import type { Locale, PaletteId, Project, ProjectCategory } from '@/types/portfolio';
 
 interface HomePageProps {
   locale: Locale;
+  palette: PaletteId;
   projects: Project[];
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ locale, projects }) => {
+export const HomePage: React.FC<HomePageProps> = ({ locale, palette, projects }) => {
   const t = DICTIONARY[locale];
   const [activeCategory, setActiveCategory] = useState<ProjectCategory | 'all'>('all');
   const location = useLocation();
@@ -65,18 +68,17 @@ export const HomePage: React.FC<HomePageProps> = ({ locale, projects }) => {
       />
 
       <main id="main-content">
-        <HeroSection locale={locale} />
-        <ServicesShowcase
-          locale={locale}
-          onSelectCategory={(cat) => setActiveCategory(cat)}
-        />
-        <WorksGallery
+        <HeroSection locale={locale} palette={palette} />
+        <ManifestoSection locale={locale} />
+        <ServicesStage locale={locale} onSelectCategory={(cat) => setActiveCategory(cat)} />
+        <WorksShowcase
           locale={locale}
           projects={projects}
           activeCategory={activeCategory}
           onChangeCategory={setActiveCategory}
         />
-        <FounderAndSkillsSection locale={locale} />
+        <FounderStage locale={locale} />
+        <KineticMarquee locale={locale} />
         <ContactSection locale={locale} />
       </main>
     </>

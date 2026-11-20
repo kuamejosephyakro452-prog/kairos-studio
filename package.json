@@ -15,6 +15,12 @@
     "test:smoke": "node scripts/verify-build.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "@fontsource-variable/space-grotesk": "^5.3.0",
+    "@fontsource-variable/syne": "^5.3.0",
     "@supabase/supabase-js": "^2.49.1",
     "gsap": "^3.12.7",
     "lenis": "^1.2.3",

@@ -26,6 +26,7 @@ import {
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import {
   checkIsAdminUser,
+  deleteAllDemoProjectsAdmin,
   deleteMessageAdmin,
   deleteProjectAdmin,
   fetchAllProjectsAdmin,
@@ -56,6 +57,8 @@ const EMPTY_DRAFT: EditorDraft = {
   status: 'draft',
   featured: false,
   sort_order: 10,
+  origine_non_verifiee: false,
+  demo: false,
   title_fr: '',
   title_en: '',
   subtitle_fr: '',
@@ -109,6 +112,9 @@ export const AdminPage: React.FC = () => {
 
   // Données admin
   const [activeTab, setActiveTab] = useState<'projects' | 'messages'>('projects');
+  const [projectFilter, setProjectFilter] = useState<
+    'all' | 'published' | 'draft' | 'unverified' | 'demo'
+  >('all');
   const [projects, setProjects] = useState<Project[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [dataBusy, setDataBusy] = useState(false);
@@ -446,7 +452,49 @@ export const AdminPage: React.FC = () => {
     });
   };
 
+  const handleDeleteAllDemo = async () => {
+    const demoCount = projects.filter((p) => p.demo).length;
+    if (demoCount === 0) {
+      setFeedback({ type: 'ok', text: 'Aucun contenu de démonstration à supprimer.' });
+      return;
+    }
+    if (
+      !window.confirm(
+        `Supprimer définitivement les ${demoCount} contenus de démonstration (base + fichiers demo/) ?`
+      )
+    ) {
+      return;
+    }
+    setDataBusy(true);
+    setFeedback(null);
+    try {
+      const removed = await deleteAllDemoProjectsAdmin();
+      await loadAdminData();
+      setFeedback({
+        type: 'ok',
+        text: `${removed} contenu(s) de démonstration supprimé(s) définitivement.`,
+      });
+    } catch (err) {
+      setFeedback({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Erreur lors de la suppression des démos.',
+      });
+    } finally {
+      setDataBusy(false);
+    }
+  };
+
+  const filteredAdminProjects = projects.filter((p) => {
+    if (projectFilter === 'published') return p.status === 'published';
+    if (projectFilter === 'draft') return p.status === 'draft';
+    if (projectFilter === 'unverified') return Boolean(p.origine_non_verifiee);
+    if (projectFilter === 'demo') return Boolean(p.demo);
+    return true;
+  });
+
   const unreadCount = messages.filter((m) => !m.is_read).length;
+  const demoTotal = projects.filter((p) => p.demo).length;
+  const unverifiedTotal = projects.filter((p) => p.origine_non_verifiee).length;
 
   return (
     <>
@@ -581,7 +629,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loginBusy}
-                  className="w-full cursor-pointer rounded-full bg-gold-gradient py-3.5 text-xs font-semibold tracking-[0.22em] uppercase text-[#0B0B0C] disabled:opacity-60"
+                  className="w-full cursor-pointer rounded-full bg-accent-gradient py-3.5 text-xs font-semibold tracking-[0.22em] uppercase text-[#0B0B0C] disabled:opacity-60"
                 >
                   {loginBusy ? 'Vérification...' : 'Se connecter'}
                 </button>
@@ -715,7 +763,7 @@ export const AdminPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={dataBusy}
-                      className="cursor-pointer rounded-full bg-gold-gradient px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0B0C]"
+                      className="cursor-pointer rounded-full bg-accent-gradient px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0B0C]"
                     >
                       Enregistrer le mot de passe
                     </button>
@@ -734,22 +782,71 @@ export const AdminPage: React.FC = () => {
               {activeTab === 'projects' && !editing && (
                 <div className="space-y-6">
                   <div className="flex flex-wrap items-center justify-between gap-4">
-                    <p className="text-xs text-[#BDB5A8]">
-                      Publiés : {projects.filter((p) => p.status === 'published').length} · Brouillons :{' '}
-                      {projects.filter((p) => p.status === 'draft').length} · Quota Storage gratuit Supabase : ~1 Go (max 25 Mo/fichier)
-                    </p>
-                    <button
-                      type="button"
-                      onClick={openNewProject}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gold-gradient px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0B0C]"
-                    >
-                      <FolderPlus className="h-4 w-4" />
-                      <span>Nouveau projet</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(
+                        [
+                          { id: 'all', label: `Tous (${projects.length})` },
+                          {
+                            id: 'published',
+                            label: `Publiés (${projects.filter((p) => p.status === 'published').length})`,
+                          },
+                          {
+                            id: 'draft',
+                            label: `Brouillons (${projects.filter((p) => p.status === 'draft').length})`,
+                          },
+                          {
+                            id: 'unverified',
+                            label: `Origine non vérifiée (${unverifiedTotal})`,
+                          },
+                          { id: 'demo', label: `Démo (${demoTotal})` },
+                        ] as const
+                      ).map((f) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setProjectFilter(f.id)}
+                          className={`cursor-pointer rounded-full px-3.5 py-1.5 text-[11px] font-semibold tracking-[0.1em] uppercase transition-colors ${
+                            projectFilter === f.id
+                              ? 'bg-[#FF6B00] text-[#07070B]'
+                              : 'border border-[#F4EEE3]/18 text-[#BDB5A8] hover:border-[#FF6B00]/60 hover:text-[#F4EEE3]'
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      {demoTotal > 0 && (
+                        <button
+                          type="button"
+                          disabled={dataBusy}
+                          onClick={handleDeleteAllDemo}
+                          className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-red-500/45 bg-red-500/15 px-5 py-2.5 text-xs font-semibold tracking-[0.14em] uppercase text-red-200 hover:bg-red-500/30 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>Supprimer tout le contenu de démonstration ({demoTotal})</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={openNewProject}
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-accent-gradient px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#07070B]"
+                      >
+                        <FolderPlus className="h-4 w-4" />
+                        <span>Nouveau projet</span>
+                      </button>
+                    </div>
                   </div>
 
+                  <p className="text-xs text-[#BDB5A8]">
+                    Quota Storage gratuit Supabase : ~1 Go (max 25 Mo/fichier). Utilisez les filtres ci-dessus pour retrouver et gérer rapidement les pièces d’origine non vérifiée ou de démonstration.
+                  </p>
+
                   <div className="space-y-4">
-                    {projects.map((proj, idx) => (
+                    {filteredAdminProjects.map((proj) => {
+                      const idx = projects.findIndex((p) => p.id === proj.id);
+                      return (
                       <div
                         key={proj.id}
                         className="flex flex-col justify-between gap-5 rounded-2xl border border-[#F4EEE3]/12 bg-[#141418] p-5 sm:flex-row sm:items-center"
@@ -771,6 +868,16 @@ export const AdminPage: React.FC = () => {
                               >
                                 {proj.status === 'published' ? 'Publié' : 'Brouillon'}
                               </span>
+                              {proj.origine_non_verifiee && (
+                                <span className="rounded-full bg-orange-500/20 px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.14em] uppercase text-orange-300">
+                                  Origine non vérifiée
+                                </span>
+                              )}
+                              {proj.demo && (
+                                <span className="rounded-full bg-fuchsia-500/20 px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.14em] uppercase text-fuchsia-300">
+                                  Démo temporaire
+                                </span>
+                              )}
                               <span className="text-[11px] text-[#BDB5A8]">
                                 {catLabels[proj.category]}
                               </span>
@@ -788,7 +895,7 @@ export const AdminPage: React.FC = () => {
                             disabled={idx === 0 || dataBusy}
                             onClick={() => handleMoveProject(idx, -1)}
                             title="Monter"
-                            className="cursor-pointer rounded-lg border border-[#F4EEE3]/15 p-2 text-[#BDB5A8] hover:border-[#E8C877] hover:text-[#E8C877] disabled:opacity-30"
+                            className="cursor-pointer rounded-lg border border-[#F4EEE3]/15 p-2 text-[#BDB5A8] hover:border-[#FF6B00] hover:text-[#FF6B00] disabled:opacity-30"
                           >
                             <ArrowUp className="h-4 w-4" />
                           </button>
@@ -797,7 +904,7 @@ export const AdminPage: React.FC = () => {
                             disabled={idx === projects.length - 1 || dataBusy}
                             onClick={() => handleMoveProject(idx, 1)}
                             title="Descendre"
-                            className="cursor-pointer rounded-lg border border-[#F4EEE3]/15 p-2 text-[#BDB5A8] hover:border-[#E8C877] hover:text-[#E8C877] disabled:opacity-30"
+                            className="cursor-pointer rounded-lg border border-[#F4EEE3]/15 p-2 text-[#BDB5A8] hover:border-[#FF6B00] hover:text-[#FF6B00] disabled:opacity-30"
                           >
                             <ArrowDown className="h-4 w-4" />
                           </button>
@@ -805,7 +912,7 @@ export const AdminPage: React.FC = () => {
                             type="button"
                             disabled={dataBusy}
                             onClick={() => handleToggleStatus(proj)}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#F4EEE3]/18 px-3 py-2 text-xs text-[#F4EEE3] hover:border-[#E8C877] hover:text-[#E8C877]"
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#F4EEE3]/18 px-3 py-2 text-xs text-[#F4EEE3] hover:border-[#FF6B00] hover:text-[#FF8C3A]"
                           >
                             {proj.status === 'published' ? (
                               <>
@@ -822,7 +929,7 @@ export const AdminPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => openEditProject(proj)}
-                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#E8C877]/45 px-3 py-2 text-xs text-[#E8C877] hover:bg-[#E8C877] hover:text-[#0B0B0C]"
+                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#FF6B00]/55 px-3 py-2 text-xs text-[#FF8C3A] hover:bg-[#FF6B00] hover:text-[#07070B]"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             <span>Modifier</span>
@@ -838,7 +945,8 @@ export const AdminPage: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -916,6 +1024,30 @@ export const AdminPage: React.FC = () => {
                         className="mt-2 w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-3 py-2.5 text-sm"
                       />
                     </div>
+                  </div>
+
+                  {/* Marqueurs origine & démo */}
+                  <div className="flex flex-wrap gap-6 rounded-xl border border-[#F4EEE3]/12 bg-[#0B0B0C] px-4 py-3 text-xs">
+                    <label className="inline-flex cursor-pointer items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(editing.origine_non_verifiee)}
+                        onChange={(e) =>
+                          setEditing({ ...editing, origine_non_verifiee: e.target.checked })
+                        }
+                        className="h-4 w-4 accent-[#FF6B00]"
+                      />
+                      <span>Origine non vérifiée (à trier ultérieurement)</span>
+                    </label>
+                    <label className="inline-flex cursor-pointer items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(editing.demo)}
+                        onChange={(e) => setEditing({ ...editing, demo: e.target.checked })}
+                        className="h-4 w-4 accent-[#E6007E]"
+                      />
+                      <span>Contenu de démonstration temporaire (supprimable en 1 clic)</span>
+                    </label>
                   </div>
 
                   {/* Titres & textes FR / EN */}
@@ -1227,7 +1359,7 @@ export const AdminPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={dataBusy || Boolean(uploadingField)}
-                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gold-gradient px-8 py-3 text-xs font-semibold tracking-[0.2em] uppercase text-[#0B0B0C] disabled:opacity-60"
+                      className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-accent-gradient px-8 py-3 text-xs font-semibold tracking-[0.2em] uppercase text-[#0B0B0C] disabled:opacity-60"
                     >
                       <Save className="h-4 w-4" />
                       <span>{dataBusy ? 'Enregistrement...' : 'Enregistrer le projet'}</span>

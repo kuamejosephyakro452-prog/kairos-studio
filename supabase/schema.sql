@@ -63,6 +63,8 @@ create table if not exists public.projects (
   status text not null default 'draft' check (status in ('draft', 'published')),
   featured boolean not null default false,
   sort_order integer not null default 0,
+  origine_non_verifiee boolean not null default false,
+  demo boolean not null default false,
 
   -- Contenus bilingues FR / EN
   title_fr text not null,
@@ -101,6 +103,7 @@ create table if not exists public.projects (
 
 create index if not exists idx_projects_status_order on public.projects (status, sort_order asc, created_at desc);
 create index if not exists idx_projects_category on public.projects (category);
+create index if not exists idx_projects_flags on public.projects (origine_non_verifiee, demo);
 
 -- Trigger updated_at
 create or replace function public.touch_updated_at()
@@ -248,6 +251,7 @@ create policy "storage_public_read_portfolio_media"
     bucket_id = 'portfolio-media'
     and (
       name like 'published/%'
+      or name like 'demo/%'
       or public.is_kairos_admin()
     )
   );
