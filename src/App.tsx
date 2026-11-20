@@ -97,6 +97,14 @@ const PublicLayout: React.FC<{
 };
 
 const RootRedirect: React.FC = () => {
+  // Si un lien de récupération/auth Supabase arrive sur la racine, diriger vers /admin en gardant le hash
+  if (
+    typeof window !== 'undefined' &&
+    /type=recovery|access_token=|error_description=/.test(window.location.hash)
+  ) {
+    return <Navigate to={`/admin${window.location.hash}`} replace />;
+  }
+
   // Français PAR DÉFAUT. Ne bascule vers /en que si l'utilisateur a explicitement mémorisé 'en'.
   let target: Locale = 'fr';
   try {

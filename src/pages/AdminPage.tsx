@@ -97,11 +97,15 @@ export const AdminPage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
 
-  // Formulaire de connexion
+  // Formulaire de connexion & récupération mot de passe
   const [loginEmail, setLoginEmail] = useState('kuamejosephyakro452@gmail.com');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [loginBusy, setLoginBusy] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Données admin
   const [activeTab, setActiveTab] = useState<'projects' | 'messages'>('projects');
@@ -156,16 +160,81 @@ export const AdminPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+      setRecoveryMode(true);
+    }
     refreshAdminState();
     const client = getSupabaseClient();
     if (!client) return;
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange(() => {
+    } = client.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true);
+      }
       refreshAdminState();
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleSendResetEmail = async () => {
+    setLoginError(null);
+    setLoginNotice(null);
+    const client = getSupabaseClient();
+    if (!client) return;
+    setLoginBusy(true);
+    try {
+      const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+      const redirectTo = `${window.location.origin}${base}/admin`;
+      const { error } = await client.auth.resetPasswordForEmail(loginEmail.trim(), {
+        redirectTo,
+      });
+      if (error) {
+        setLoginError('Impossible d’envoyer l’e-mail de réinitialisation pour le moment.');
+      } else {
+        setLoginNotice(
+          'Un lien sécurisé de définition / réinitialisation du mot de passe a été envoyé à votre adresse administrateur.'
+        );
+      }
+    } finally {
+      setLoginBusy(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeedback(null);
+    if (newPassword.length < 10) {
+      setFeedback({
+        type: 'err',
+        text: 'Choisissez un mot de passe fort d’au moins 10 caractères.',
+      });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setFeedback({ type: 'err', text: 'Les deux mots de passe ne correspondent pas.' });
+      return;
+    }
+    const client = getSupabaseClient();
+    if (!client) return;
+    setDataBusy(true);
+    try {
+      const { error } = await client.auth.updateUser({ password: newPassword });
+      if (error) {
+        setFeedback({ type: 'err', text: error.message });
+      } else {
+        setNewPassword('');
+        setConfirmPassword('');
+        setRecoveryMode(false);
+        setFeedback({
+          type: 'ok',
+          text: 'Mot de passe administrateur mis à jour avec succès.',
+        });
+      }
+    } finally {
+      setDataBusy(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -503,12 +572,27 @@ export const AdminPage: React.FC = () => {
                   </p>
                 )}
 
+                {loginNotice && (
+                  <p role="status" className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-4 py-2.5 text-xs text-emerald-200">
+                    {loginNotice}
+                  </p>
+                )}
+
                 <button
                   type="submit"
                   disabled={loginBusy}
                   className="w-full cursor-pointer rounded-full bg-gold-gradient py-3.5 text-xs font-semibold tracking-[0.22em] uppercase text-[#0B0B0C] disabled:opacity-60"
                 >
                   {loginBusy ? 'Vérification...' : 'Se connecter'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loginBusy}
+                  onClick={handleSendResetEmail}
+                  className="w-full cursor-pointer pt-1 text-center text-xs text-[#BDB5A8] underline decoration-[#E8C877]/45 underline-offset-4 hover:text-[#E8C877] disabled:opacity-50"
+                >
+                  Première connexion ou mot de passe oublié ? Recevoir un lien par e-mail
                 </button>
               </form>
             </div>
@@ -594,6 +678,56 @@ export const AdminPage: React.FC = () => {
                     <X className="h-4 w-4" />
                   </button>
                 </div>
+              )}
+
+              {recoveryMode && (
+                <form
+                  onSubmit={handleUpdatePassword}
+                  className="rounded-2xl border border-[#E8C877]/45 bg-[#17161B] p-6"
+                >
+                  <h2 className="font-display text-2xl text-[#E8C877]">
+                    Définir votre mot de passe administrateur
+                  </h2>
+                  <p className="mt-1 text-xs text-[#BDB5A8]">
+                    Choisissez un mot de passe personnel fort (au moins 10 caractères).
+                  </p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <input
+                      type="password"
+                      required
+                      minLength={10}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Nouveau mot de passe (min. 10 car.)"
+                      className="rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-2.5 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877]"
+                    />
+                    <input
+                      type="password"
+                      required
+                      minLength={10}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirmer le mot de passe"
+                      className="rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-2.5 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877]"
+                    />
+                  </div>
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={dataBusy}
+                      className="cursor-pointer rounded-full bg-gold-gradient px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0B0C]"
+                    >
+                      Enregistrer le mot de passe
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecoveryMode(false)}
+                      className="cursor-pointer rounded-full border border-[#F4EEE3]/20 px-5 py-2.5 text-xs uppercase tracking-[0.14em]"
+                    >
+                      Fermer
+                    </button>
+                  </div>
+                </form>
               )}
 
               {/* ONGLET PROJETS */}
