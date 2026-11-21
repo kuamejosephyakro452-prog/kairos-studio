@@ -52,6 +52,8 @@ import {
   fetchAllProjectsAdmin,
   fetchContactMessagesAdmin,
   fetchUnreadMessagesCountAdmin,
+  getMissingCollection2026Projects,
+  publishMissingCollection2026Admin,
   saveProjectAdmin,
   toggleMessageReadAdmin,
   updateProjectOrderAdmin,
@@ -786,6 +788,28 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const handlePublishMissingCollection = async () => {
+    setDataBusy(true);
+    setFeedback(null);
+    try {
+      const added = await publishMissingCollection2026Admin(projects);
+      await loadAdminData();
+      setFeedback({
+        type: 'ok',
+        text: `Enregistré — ${added} création(s) de la collection (5 affiches + vidéo Showreel 60 s) publiée(s) dans Supabase et visible(s) sur le site public.`,
+      });
+    } catch (err) {
+      setFeedback({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Erreur lors de la publication dans Supabase.',
+      });
+    } finally {
+      setDataBusy(false);
+    }
+  };
+
+  const missingCollectionProjects = getMissingCollection2026Projects(projects);
+
   const filteredAdminProjects = projects.filter((p) => {
     if (projectFilter === 'published') return p.status === 'published';
     if (projectFilter === 'draft') return p.status === 'draft';
@@ -1161,6 +1185,28 @@ export const AdminPage: React.FC = () => {
                   <span>{feedback.text}</span>
                   <button type="button" onClick={() => setFeedback(null)} className="cursor-pointer">
                     <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
+              {activeTab === 'projects' && missingCollectionProjects.length > 0 && (
+                <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[#E8C877]/40 bg-[#17161B] p-5 sm:flex-row sm:items-center">
+                  <div>
+                    <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#E8C877]">
+                      Collection prête à publier dans Supabase ({missingCollectionProjects.length}/6)
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#D0C8BC]">
+                      Les 5 affiches (Grande Moisson, Véra Botanique, Agir Vert, K-Vibes Sans Sommeil, Cap sur l’Essentiel) et la vidéo Showreel 60 s sont prêtes sur le site mais pas encore enregistrées dans la base Supabase.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={dataBusy}
+                    onClick={handlePublishMissingCollection}
+                    className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-accent-gradient px-6 py-3 text-xs font-semibold tracking-[0.16em] uppercase text-[#0B0B0C] disabled:opacity-60"
+                  >
+                    {dataBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    <span>Publier les {missingCollectionProjects.length} créations</span>
                   </button>
                 </div>
               )}

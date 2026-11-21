@@ -468,6 +468,76 @@ export async function saveProjectAdmin(
   }
 }
 
+export const COLLECTION_2026_SLUGS = [
+  'showreel-collection-5-affiches',
+  'affiche-grande-moisson-2026',
+  'vera-botanique-collection-kiwi',
+  'agir-vert-preservons-la-planete',
+  'k-vibes-sans-sommeil-artwork',
+  'cap-sur-lessentiel-conference',
+] as const;
+
+/**
+ * Retourne les projets de la collection 5 affiches + Showreel 60s
+ * qui existent dans les médias déployés mais ne sont pas encore enregistrés dans Supabase.
+ */
+export function getMissingCollection2026Projects(existingAdminProjects: Project[]): Project[] {
+  const existingSlugs = new Set(existingAdminProjects.map((p) => p.slug));
+  const wanted = new Set<string>(COLLECTION_2026_SLUGS);
+  return PUBLISHED_PROJECTS_SNAPSHOT.filter(
+    (p) => wanted.has(p.slug) && !existingSlugs.has(p.slug)
+  );
+}
+
+/**
+ * Insère en base Supabase (avec la session admin authentifiée + RLS) les projets
+ * de la collection 5 affiches + Showreel 60s manquants, puis invalide le cache public.
+ */
+export async function publishMissingCollection2026Admin(
+  existingAdminProjects: Project[]
+): Promise<number> {
+  const missing = getMissingCollection2026Projects(existingAdminProjects);
+  if (missing.length === 0) return 0;
+
+  for (const proj of missing) {
+    await saveProjectAdmin({
+      slug: proj.slug,
+      category: proj.category,
+      status: 'published',
+      featured: proj.featured,
+      sort_order: proj.sort_order,
+      origine_non_verifiee: false,
+      demo: false,
+      title_fr: proj.title_fr,
+      title_en: proj.title_en,
+      subtitle_fr: proj.subtitle_fr,
+      subtitle_en: proj.subtitle_en,
+      summary_fr: proj.summary_fr,
+      summary_en: proj.summary_en,
+      description_fr: proj.description_fr,
+      description_en: proj.description_en,
+      client_name: proj.client_name ?? null,
+      project_year: proj.project_year ?? '2026',
+      role_fr: proj.role_fr ?? null,
+      role_en: proj.role_en ?? null,
+      deliverables_fr: proj.deliverables_fr,
+      deliverables_en: proj.deliverables_en,
+      external_url: proj.external_url ?? null,
+      cover_image_url: proj.cover_image_url,
+      cover_image_alt_fr: proj.cover_image_alt_fr,
+      cover_image_alt_en: proj.cover_image_alt_en,
+      cover_aspect: proj.cover_aspect,
+      video_url: proj.video_url ?? null,
+      video_webm_url: proj.video_webm_url ?? null,
+      video_poster_url: proj.video_poster_url ?? null,
+      gallery: proj.gallery,
+    });
+  }
+
+  invalidatePublishedProjectsCache();
+  return missing.length;
+}
+
 export async function deleteProjectAdmin(id: string): Promise<void> {
   const client = getSupabaseClient();
   if (!client) throw new Error('Supabase non configuré.');
