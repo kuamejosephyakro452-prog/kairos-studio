@@ -13,6 +13,16 @@ export const isSupabaseConfigured = Boolean(
 );
 
 /**
+ * Calcule l'URL exacte de redirection OAuth vers /admin, compatible GitHub Pages
+ * (ex. https://kuamejosephyakro452-prog.github.io/kairos-studio/admin) et local.
+ */
+export function getAdminOAuthRedirectUrl(): string {
+  if (typeof window === 'undefined') return '';
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  return `${window.location.origin}${base}/admin`;
+}
+
+/**
  * Wrapper fetch appliquant un délai maximum raisonnable sur chaque requête Supabase
  * pour éviter les blocages infinis sur connexion mobile ou instable.
  */
@@ -36,6 +46,7 @@ export function getSupabaseClient(): SupabaseClient | null {
   if (!clientInstance) {
     clientInstance = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
+        flowType: 'pkce',
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
@@ -51,7 +62,7 @@ export function getSupabaseClient(): SupabaseClient | null {
 
 /**
  * Préchauffe discrètement la connexion DNS/TLS vers Supabase Auth dès l'ouverture
- * de /admin afin d'économiser 400 à 700 ms lors du clic sur « Se connecter ».
+ * de /admin afin d'économiser 400 à 700 ms lors de la connexion.
  * Totalement non bloquant et sans exposition de secret.
  */
 export function prewarmSupabaseAuth(): void {
@@ -66,7 +77,6 @@ export function prewarmSupabaseAuth(): void {
     cache: 'no-store',
   })
     .catch(() => {
-      // Préchauffage opportuniste : silencieux en cas d'indisponibilité
       warmupDone = false;
     })
     .finally(() => clearTimeout(timer));

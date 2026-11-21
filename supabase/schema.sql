@@ -16,12 +16,16 @@ create extension if not exists pgcrypto;
 create table if not exists public.admin_users (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
+  github_username text unique,
   created_at timestamptz not null default now()
 );
 
+-- Contrainte singleton : garantit physiquement qu'un seul administrateur existe
+create unique index if not exists idx_admin_users_single_admin on public.admin_users ((true));
+
 alter table public.admin_users enable row level security;
 
--- Fonction helper SECURITY DEFINER vérifiant si l'utilisateur courant est l'admin autorisé
+-- Fonction helper SECURITY DEFINER vérifiant si l'utilisateur courant est l'admin unique autorisé
 create or replace function public.is_kairos_admin()
 returns boolean
 language sql
@@ -32,7 +36,9 @@ as $$
   select exists (
     select 1
     from public.admin_users au
+    join auth.users u on u.id = au.user_id
     where au.user_id = auth.uid()
+      and (u.banned_until is null or u.banned_until <= now())
   );
 $$;
 

@@ -2,6 +2,9 @@ import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js';
 
 export type AdminAuthErrorKind =
   | 'invalid_credentials'
+  | 'unauthorized_account'
+  | 'oauth_provider_disabled'
+  | 'oauth_cancelled'
   | 'rate_limited'
   | 'timeout'
   | 'network_or_server'
@@ -48,8 +51,8 @@ function extractMessage(err: unknown): string {
 }
 
 /**
- * Classifie rigoureusement toute erreur d'authentification ou réseau Supabase
- * afin de ne JAMAIS confondre une erreur réseau, un timeout ou un rate-limit
+ * Classifie rigoureusement toute erreur d'authentification (GitHub OAuth, e-mail/mot de passe
+ * ou réseau) afin de ne JAMAIS confondre une erreur réseau, un timeout ou un rate-limit
  * avec un refus d'identifiants.
  */
 export function classifyAuthError(
@@ -95,12 +98,48 @@ export function classifyAuthError(
     };
   }
 
-  // 3. Erreur réseau / serveur indisponible (offline, fetch error, 5xx, status 0)
+  // 3. Fournisseur GitHub non activé côté Supabase Dashboard
+  if (
+    code.includes('validation_failed') && /provider is not enabled|unsupported provider/.test(msg) ||
+    /provider is not enabled|unsupported provider|oauth_provider_not_supported/.test(msg)
+  ) {
+    return {
+      kind: 'oauth_provider_disabled',
+      message:
+        'La connexion GitHub n’est pas encore activée dans Supabase Auth. Activez le fournisseur GitHub dans votre tableau de bord Supabase ou utilisez la connexion de secours.',
+      retryable: false,
+    };
+  }
+
+  // 4. Compte non autorisé / inscriptions publiques désactivées (autre compte GitHub)
+  if (
+    code.includes('signup_disabled') ||
+    code.includes('user_banned') ||
+    /signups not allowed|signup_disabled|not allowed for this instance|user is banned/.test(msg)
+  ) {
+    return {
+      kind: 'unauthorized_account',
+      message:
+        'Accès refusé : seul le compte GitHub administrateur autorisé peut se connecter (les inscriptions publiques sont désactivées).',
+      retryable: false,
+    };
+  }
+
+  // 5. Annulation explicite par l'utilisateur sur l'écran OAuth GitHub
+  if (/user denied|access_denied.*denied|cancelled|canceled/.test(msg)) {
+    return {
+      kind: 'oauth_cancelled',
+      message: 'Connexion GitHub annulée. Vous pouvez réessayer à tout moment.',
+      retryable: false,
+    };
+  }
+
+  // 6. Erreur réseau / serveur indisponible (offline, fetch error, 5xx, status 0)
   if (
     isOffline ||
     code.includes('authretryablefetcherror') ||
     (typeof status === 'number' && (status === 0 || status >= 500)) ||
-    /failed to fetch|networkerror|network request failed|load failed|fetch failed|econnrefused|enotfound|bad gateway|service unavailable|internal server error|cors/.test(
+    /failed to fetch|networkerror|network request failed|load failed|fetch failed|econnrefused|enotfound|bad gateway|service unavailable|temporarily_unavailable|internal server error|server_error|cors/.test(
       msg
     )
   ) {
@@ -111,7 +150,7 @@ export function classifyAuthError(
     };
   }
 
-  // 4. Identifiants incorrects (HTTP 400 avec erreur métier Auth)
+  // 7. Identifiants incorrects (connexion de secours e-mail + mot de passe)
   if (
     code.includes('invalid_credentials') ||
     code.includes('invalid_grant') ||
@@ -127,11 +166,11 @@ export function classifyAuthError(
     };
   }
 
-  // 5. Autre erreur HTTP 4xx (ex: mauvaise requête, compte bloqué) sans faussement accuser le réseau
+  // 8. Autre erreur HTTP 4xx
   if (typeof status === 'number' && status >= 400 && status < 500) {
     return {
       kind: 'invalid_credentials',
-      message: 'Identifiants incorrects ou accès refusé par le serveur d’authentification.',
+      message: 'Échec de la connexion ou accès refusé par le serveur d’authentification.',
       retryable: false,
     };
   }
@@ -141,6 +180,75 @@ export function classifyAuthError(
     message: 'Une erreur inattendue est survenue lors de la connexion. Réessayez.',
     retryable: false,
   };
+}
+
+/**
+ * Analyse les paramètres de retour OAuth (query ?error=... ou hash #error=...)
+ * envoyés par Supabase/GitHub lors d'un refus ou échec de connexion.
+ */
+export function parseOAuthCallbackError(search: string, hash: string): ClassifiedAuthError | null {
+  const queryParams = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  const hashClean = hash.startsWith('#') ? hash.slice(1) : hash;
+  const hashParams = new URLSearchParams(hashClean);
+
+  const errorCode =
+    queryParams.get('error_code') ||
+    hashParams.get('error_code') ||
+    queryParams.get('error') ||
+    hashParams.get('error');
+
+  const errorDescription =
+    queryParams.get('error_description') || hashParams.get('error_description') || '';
+
+  if (!errorCode && !errorDescription) return null;
+
+  const combinedDesc = decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+  const normCode = (errorCode || '').toLowerCase();
+
+  // Cas spécifique : GitHub/Supabase retourne access_denied avec "Signups not allowed"
+  if (
+    normCode === 'signup_disabled' ||
+    /signups not allowed|signup_disabled/i.test(combinedDesc)
+  ) {
+    return {
+      kind: 'unauthorized_account',
+      message:
+        'Accès refusé : seul le compte GitHub administrateur autorisé peut se connecter (les inscriptions publiques sont désactivées).',
+      retryable: false,
+    };
+  }
+
+  if (normCode === 'access_denied' && /denied|cancel/i.test(combinedDesc)) {
+    return {
+      kind: 'oauth_cancelled',
+      message: 'Connexion GitHub annulée. Vous pouvez réessayer à tout moment.',
+      retryable: false,
+    };
+  }
+
+  if (normCode === 'access_denied') {
+    return {
+      kind: 'unauthorized_account',
+      message:
+        'Accès refusé par le fournisseur d’authentification. Seul le compte administrateur autorisé peut accéder à cet espace.',
+      retryable: false,
+    };
+  }
+
+  return classifyAuthError({
+    code: errorCode || undefined,
+    message: combinedDesc || errorCode || 'Échec de connexion GitHub',
+  });
+}
+
+/**
+ * Détecte un retour de callback OAuth PKCE (?code=...) ou implicite (#access_token=...)
+ * afin d'afficher un état de chargement clair pendant l'échange de session.
+ */
+export function hasOAuthCallbackParams(search: string, hash: string): boolean {
+  const queryParams = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  if (queryParams.has('code')) return true;
+  return /access_token=|refresh_token=/.test(hash);
 }
 
 /**
@@ -170,6 +278,55 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export interface OAuthStartResult {
+  url: string | null;
+  error: ClassifiedAuthError | null;
+}
+
+/**
+ * Initie la connexion OAuth GitHub (flux PKCE) avec timeout et classification stricte des erreurs.
+ */
+export async function signInWithGitHubAdmin(
+  client: Pick<SupabaseClient, 'auth'>,
+  redirectTo: string,
+  options?: {
+    timeoutMs?: number;
+    isOnline?: boolean;
+  }
+): Promise<OAuthStartResult> {
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  try {
+    const { data, error } = await withTimeout(
+      () =>
+        client.auth.signInWithOAuth({
+          provider: 'github',
+          options: {
+            redirectTo,
+            scopes: 'read:user user:email',
+          },
+        }),
+      timeoutMs
+    );
+
+    if (error) {
+      return {
+        url: null,
+        error: classifyAuthError(error, { isOnline: options?.isOnline }),
+      };
+    }
+
+    return {
+      url: data?.url ?? null,
+      error: null,
+    };
+  } catch (caught) {
+    return {
+      url: null,
+      error: classifyAuthError(caught, { isOnline: options?.isOnline }),
+    };
+  }
+}
+
 export interface SignInResult {
   session: Session | null;
   error: ClassifiedAuthError | null;
@@ -177,9 +334,9 @@ export interface SignInResult {
 }
 
 /**
- * Connexion par e-mail/mot de passe avec :
+ * Connexion de secours par e-mail/mot de passe avec :
  * - Délai d'attente raisonnable (timeout)
- * - 1 seule nouvelle tentative automatique UNIQUEMENT en cas d'erreur réseau/serveur/timeout transitoire
+ * - Nouvelles tentatives automatiques UNIQUEMENT en cas d'erreur réseau/serveur/timeout transitoire
  * - JAMAIS de retry sur mauvais identifiants ni sur 429 (préserve intégralement le rate-limiting)
  */
 export async function signInAdminWithResilience(

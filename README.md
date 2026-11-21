@@ -44,13 +44,29 @@
 
 ---
 
-## 3. Espace d'Administration (`/admin`)
+## 3. Espace d'Administration (`/admin`) & Connexion GitHub OAuth
 
-1. Ouvrez `/admin` et connectez-vous avec l’unique compte administrateur (`kuamejosephyakro452@gmail.com`). Les inscriptions publiques sont désactivées dans Supabase Auth.
-2. **Filtres rapides** : *Tous*, *Publiés*, *Brouillons*, **Origine non vérifiée** (`origine_non_verifiee = true`) et **Démo** (`demo = true`).
-3. **Vérifier les pièces ajoutées (`Origine non vérifiée`)** : filtrez sur **Origine non vérifiée**, ouvrez chaque fiche pour confirmer sa paternité (décochez la case), la renommer ou la dépublier/supprimer.
-4. **Supprimer tout le contenu de démonstration en un clic** : cliquez sur le bouton dédié **« Supprimer tout le contenu de démonstration »** en haut de l’administration pour effacer instantanément toutes les entrées marquées `demo = true` en base (et les éventuels fichiers dans `demo/` sur Supabase Storage). Pour retirer également les fichiers statiques du dépôt, supprimez le dossier `public/media/demo/` et les 3 entrées `demo: true` dans `src/data/projects.snapshot.ts`.
-5. **Médias & Messages** : import direct d’images/vidéos dans le bucket Supabase Storage `portfolio-media` (plafond 25 Mo/fichier) et gestion complète des messages reçus via le formulaire de contact.
+1. **Connexion principale par GitHub (OAuth 2.0 PKCE)** : ouvrez `/admin` et cliquez sur **« Se connecter avec GitHub »**. L'authentification passe par Supabase Auth (`flowType: 'pkce'`). Une connexion de secours par e-mail et mot de passe reste disponible dans un panneau repliable, verrouillée sur ce même compte unique.
+2. **Configuration GitHub OAuth + Supabase Dashboard** *(aucun secret dans le dépôt)* :
+   - Dans **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App** :
+     - **Homepage URL** : `https://kuamejosephyakro452-prog.github.io/kairos-studio/`
+     - **Authorization callback URL** : `https://lpenmdantrekfhyehbyp.supabase.co/auth/v1/callback`
+   - Dans **Supabase Dashboard → Authentication → Providers → GitHub** :
+     - Activer **GitHub Enabled** et saisir le **Client ID** et le **Client Secret** générés par GitHub.
+   - Dans **Supabase Dashboard → Authentication → URL Configuration** :
+     - **Site URL** : `https://kuamejosephyakro452-prog.github.io/kairos-studio/admin`
+     - **Redirect URLs** :
+       - `https://kuamejosephyakro452-prog.github.io/kairos-studio/admin`
+       - `https://kuamejosephyakro452-prog.github.io/kairos-studio/*`
+       - `http://localhost:5173/kairos-studio/admin`
+       - `http://localhost:4173/kairos-studio/admin`
+   - Dans **Supabase Dashboard → Authentication → Providers → Email / User Signups** :
+     - Vérifier que **Allow new users to sign up** reste **DÉSACTIVÉ** (`disable_signup: true`), afin que tout autre compte GitHub soit bloqué dès l'authentification.
+   - Vérification côté base de données (RLS) : seul l'unique compte présent dans `public.admin_users` (`kuamejosephyakro452@gmail.com` / `kuamejosephyakro452-prog`) dispose des droits admin ; tout autre compte authentifié est immédiatement déconnecté et bloqué par les règles RLS PostgreSQL (`supabase/migrations/20261121_github_oauth_single_admin.sql`).
+3. **Filtres rapides** : *Tous*, *Publiés*, *Brouillons*, **Origine non vérifiée** (`origine_non_verifiee = true`) et **Démo** (`demo = true`).
+4. **Vérifier les pièces ajoutées (`Origine non vérifiée`)** : filtrez sur **Origine non vérifiée**, ouvrez chaque fiche pour confirmer sa paternité (décochez la case), la renommer ou la dépublier/supprimer.
+5. **Supprimer tout le contenu de démonstration en un clic** : cliquez sur le bouton dédié **« Supprimer tout le contenu de démonstration »** en haut de l’administration pour effacer instantanément toutes les entrées marquées `demo = true` en base (et les éventuels fichiers dans `demo/` sur Supabase Storage). Pour retirer également les fichiers statiques du dépôt, supprimez le dossier `public/media/demo/` et les 3 entrées `demo: true` dans `src/data/projects.snapshot.ts`.
+6. **Médias & Messages** : import direct d’images/vidéos dans le bucket Supabase Storage `portfolio-media` (plafond 25 Mo/fichier) et gestion complète des messages reçus via le formulaire de contact.
 
 ---
 

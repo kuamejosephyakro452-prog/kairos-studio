@@ -115,9 +115,10 @@ const PublicLayout: React.FC<{
 const RootRedirect: React.FC = () => {
   if (
     typeof window !== 'undefined' &&
-    /type=recovery|access_token=|error_description=/.test(window.location.hash)
+    (/type=recovery|access_token=|error_description=|error=/.test(window.location.hash) ||
+      /[?&](?:code|error|error_code|error_description)=/.test(window.location.search))
   ) {
-    return <Navigate to={`/admin${window.location.hash}`} replace />;
+    return <Navigate to={`/admin${window.location.search}${window.location.hash}`} replace />;
   }
 
   let target: Locale = 'fr';

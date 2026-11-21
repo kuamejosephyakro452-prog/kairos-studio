@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowUp,
   Check,
+  ChevronDown,
   Eye,
   EyeOff,
   FolderPlus,
@@ -28,10 +29,18 @@ import {
   WifiOff,
   X,
 } from 'lucide-react';
-import { getSupabaseClient, isSupabaseConfigured, prewarmSupabaseAuth } from '@/lib/supabase';
+import {
+  getAdminOAuthRedirectUrl,
+  getSupabaseClient,
+  isSupabaseConfigured,
+  prewarmSupabaseAuth,
+} from '@/lib/supabase';
 import {
   classifyAuthError,
+  hasOAuthCallbackParams,
+  parseOAuthCallbackError,
   signInAdminWithResilience,
+  signInWithGitHubAdmin,
   type ClassifiedAuthError,
 } from '@/lib/adminAuth';
 import {
@@ -113,10 +122,13 @@ export const AdminPage: React.FC = () => {
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
   const [roleCheckError, setRoleCheckError] = useState<ClassifiedAuthError | null>(null);
 
-  // Formulaire de connexion & récupération mot de passe
+  // Formulaire de connexion (GitHub principal + secours e-mail/mot de passe repliable)
   const [loginEmail, setLoginEmail] = useState('kuamejosephyakro452@gmail.com');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordFallback, setShowPasswordFallback] = useState(false);
+  const [githubBusy, setGithubBusy] = useState(false);
+  const [oauthProcessing, setOauthProcessing] = useState(false);
   const [loginError, setLoginError] = useState<ClassifiedAuthError | null>(null);
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [loginBusy, setLoginBusy] = useState(false);
@@ -255,9 +267,37 @@ export const AdminPage: React.FC = () => {
         setIsAdmin(status.isAdmin);
         if (status.authenticated && status.isAdmin) {
           verifiedAdminUserIdRef.current = status.userId;
+          setLoginError(null);
+          // Nettoyer ?code=... de l'URL après un retour OAuth PKCE réussi
+          if (typeof window !== 'undefined' && /[?&]code=/.test(window.location.search)) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
           // L'interface admin s'affiche immédiatement pendant que les projets chargent
           setAuthLoading(false);
+          setOauthProcessing(false);
           await loadAdminData();
+        } else if (status.authenticated && !status.isAdmin) {
+          // Compte authentifié (ex. autre compte GitHub) absent de public.admin_users :
+          // révoquer immédiatement la session locale et refuser l'accès explicitement.
+          verifiedAdminUserIdRef.current = null;
+          clearAdminRoleCache();
+          const refusedIdentity = status.email || 'ce compte';
+          const client = getSupabaseClient();
+          if (client) {
+            await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+          }
+          if (typeof window !== 'undefined' && /[?&](?:code|error)=/.test(window.location.search)) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+          setAuthenticated(false);
+          setIsAdmin(false);
+          setAdminEmail(null);
+          setOauthProcessing(false);
+          setLoginError({
+            kind: 'unauthorized_account',
+            message: `Accès refusé : ${refusedIdentity} n’est pas autorisé à administrer KAIROS STUDIO. Seul le compte administrateur unique est accepté.`,
+            retryable: false,
+          });
         } else {
           verifiedAdminUserIdRef.current = null;
         }
@@ -267,14 +307,26 @@ export const AdminPage: React.FC = () => {
         setRoleCheckError(classifyAuthError(err));
       } finally {
         setAuthLoading(false);
+        setOauthProcessing(false);
       }
     },
     [loadAdminData]
   );
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
-      setRecoveryMode(true);
+    if (typeof window !== 'undefined') {
+      if (window.location.hash.includes('type=recovery')) {
+        setRecoveryMode(true);
+      }
+
+      // 1. Inspecter une éventuelle erreur retournée dans l'URL par GitHub / Supabase OAuth
+      const oauthErr = parseOAuthCallbackError(window.location.search, window.location.hash);
+      if (oauthErr) {
+        setLoginError(oauthErr);
+        window.history.replaceState(null, '', window.location.pathname);
+      } else if (hasOAuthCallbackParams(window.location.search, window.location.hash)) {
+        setOauthProcessing(true);
+      }
     }
 
     // Préchauffage non bloquant de la connexion TLS vers Supabase Auth
@@ -283,6 +335,7 @@ export const AdminPage: React.FC = () => {
     const client = getSupabaseClient();
     if (!client) {
       setAuthLoading(false);
+      setOauthProcessing(false);
       return;
     }
 
@@ -316,6 +369,7 @@ export const AdminPage: React.FC = () => {
         setUnreadCountState(0);
         setEditing(null);
         setAuthLoading(false);
+        setOauthProcessing(false);
         return;
       }
 
@@ -342,9 +396,12 @@ export const AdminPage: React.FC = () => {
           if (mounted) void applySessionState(data.session, { showFullLoader: false });
         })
         .catch(() => {
-          if (mounted) setAuthLoading(false);
+          if (mounted) {
+            setAuthLoading(false);
+            setOauthProcessing(false);
+          }
         });
-    }, 3_000);
+    }, 4_000);
 
     return () => {
       mounted = false;
@@ -352,6 +409,46 @@ export const AdminPage: React.FC = () => {
       subscription.unsubscribe();
     };
   }, [applySessionState]);
+
+  const handleGitHubLogin = async () => {
+    if (loginInFlightRef.current || loginBusy || githubBusy) return;
+    setLoginError(null);
+    setLoginNotice(null);
+
+    const client = getSupabaseClient();
+    if (!client) {
+      setLoginError({
+        kind: 'unconfigured',
+        message: 'Connexion impossible : Supabase n’est pas encore configuré.',
+        retryable: false,
+      });
+      return;
+    }
+
+    loginInFlightRef.current = true;
+    setGithubBusy(true);
+
+    try {
+      const redirectTo = getAdminOAuthRedirectUrl();
+      const result = await signInWithGitHubAdmin(client, redirectTo);
+      if (result.error) {
+        setLoginError(result.error);
+        setGithubBusy(false);
+        loginInFlightRef.current = false;
+        return;
+      }
+      // En cas normal, Supabase redirige le navigateur vers GitHub ; on garde un garde-fou
+      // pour réactiver le bouton si la redirection était bloquée par le navigateur.
+      setTimeout(() => {
+        setGithubBusy(false);
+        loginInFlightRef.current = false;
+      }, 10_000);
+    } catch (caught) {
+      setLoginError(classifyAuthError(caught));
+      setGithubBusy(false);
+      loginInFlightRef.current = false;
+    }
+  };
 
   const handleSendResetEmail = async () => {
     if (loginInFlightRef.current || loginBusy) return;
@@ -750,9 +847,14 @@ export const AdminPage: React.FC = () => {
         </header>
 
         <main className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-          {authLoading ? (
-            <div className="py-24 text-center text-sm text-[#BDB5A8]">
-              Vérification de la session sécurisée...
+          {authLoading || oauthProcessing ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-24 text-center text-sm text-[#BDB5A8]">
+              <Loader2 className="h-6 w-6 animate-spin text-[#E8C877]" />
+              <span>
+                {oauthProcessing
+                  ? 'Finalisation de la connexion GitHub sécurisée…'
+                  : 'Vérification de la session sécurisée…'}
+              </span>
             </div>
           ) : !isSupabaseConfigured ? (
             <div className="mx-auto max-w-xl rounded-2xl border border-[#E8C877]/30 bg-[#141418] p-8 sm:p-10">
@@ -773,14 +875,14 @@ export const AdminPage: React.FC = () => {
               <div className="mt-6 rounded-xl border border-[#F4EEE3]/10 bg-[#0B0B0C] p-4 text-xs leading-relaxed text-[#D0C8BC]">
                 <p className="font-semibold text-[#E8C877]">Configuration attendue :</p>
                 <ul className="mt-2 list-disc space-y-1 pl-4">
-                  <li>Définir <code>VITE_SUPABASE_URL</code> et <code>VITE_SUPABASE_ANON_KEY</code> dans <code>.env.local</code> et les secrets GitHub Actions.</li>
+                  <li>Définir <code>VITE_SUPABASE_URL</code> et <code>VITE_SUPABASE_ANON_KEY</code> dans <code>.env.local</code> et les variables GitHub Actions.</li>
                   <li>Exécuter <code>supabase/schema.sql</code> puis <code>supabase/seed.sql</code>.</li>
-                  <li>Désactiver les inscriptions publiques et lier l’unique compte admin dans <code>public.admin_users</code>.</li>
+                  <li>Activer le fournisseur GitHub OAuth, désactiver les inscriptions publiques et lier l’unique compte admin dans <code>public.admin_users</code>.</li>
                 </ul>
               </div>
             </div>
           ) : !authenticated ? (
-            /* Écran de connexion administrateur */
+            /* Écran de connexion administrateur : GitHub OAuth principal + secours e-mail/mot de passe */
             <div className="mx-auto max-w-md rounded-2xl border border-[#E8C877]/28 bg-[#141418] p-8 sm:p-10">
               <div className="flex items-center gap-2.5 text-[#E8C877]">
                 <Lock className="h-4 w-4" />
@@ -790,109 +892,158 @@ export const AdminPage: React.FC = () => {
               </div>
               <h1 className="mt-3 font-display text-3xl font-light">Connexion Administrateur</h1>
               <p className="mt-2 text-xs leading-relaxed text-[#BDB5A8]">
-                Accès strictement réservé à Joseph Kouamé (inscriptions publiques désactivées).
+                Accès strictement réservé à l’administrateur unique de KAIROS STUDIO. Inscriptions publiques désactivées et droits vérifiés côté base de données (RLS).
               </p>
 
-              <form onSubmit={handleLogin} className="mt-7 space-y-5">
-                <div>
-                  <label htmlFor="admin-email" className="block text-[11px] tracking-[0.2em] uppercase text-[#BDB5A8]">
-                    E-mail administrateur
-                  </label>
-                  <input
-                    id="admin-email"
-                    type="email"
-                    autoComplete="username"
-                    required
-                    disabled={loginBusy}
-                    value={loginEmail}
-                    onChange={(e) => {
-                      setLoginEmail(e.target.value);
-                      if (loginError) setLoginError(null);
-                    }}
-                    className="mt-2 w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-3 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877] disabled:opacity-60"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="admin-pass" className="block text-[11px] tracking-[0.2em] uppercase text-[#BDB5A8]">
-                    Mot de passe
-                  </label>
-                  <div className="relative mt-2">
-                    <input
-                      id="admin-pass"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      required
-                      disabled={loginBusy}
-                      value={loginPassword}
-                      onChange={(e) => {
-                        setLoginPassword(e.target.value);
-                        if (loginError) setLoginError(null);
-                      }}
-                      className="w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] py-3 pl-4 pr-11 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877] disabled:opacity-60"
-                    />
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      disabled={loginBusy}
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#BDB5A8] hover:text-[#E8C877] disabled:opacity-50"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {loginError && (
-                  <div
-                    role="alert"
-                    data-error-kind={loginError.kind}
-                    className={`flex items-start gap-2.5 rounded-lg border px-4 py-3 text-xs leading-relaxed ${
-                      loginError.kind === 'invalid_credentials'
-                        ? 'border-red-500/40 bg-red-500/12 text-red-200'
-                        : 'border-amber-400/40 bg-amber-400/10 text-amber-100'
-                    }`}
-                  >
-                    {loginError.kind === 'network_or_server' || loginError.kind === 'timeout' ? (
-                      <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
-                    ) : (
-                      <AlertTriangle
-                        className={`mt-0.5 h-4 w-4 shrink-0 ${
-                          loginError.kind === 'invalid_credentials'
-                            ? 'text-red-300'
-                            : 'text-amber-300'
-                        }`}
-                      />
-                    )}
-                    <span>{loginError.message}</span>
-                  </div>
-                )}
-
-                {loginNotice && (
-                  <p role="status" className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-4 py-2.5 text-xs text-emerald-200">
-                    {loginNotice}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loginBusy}
-                  aria-busy={loginBusy}
-                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-accent-gradient py-3.5 text-xs font-semibold tracking-[0.22em] uppercase text-[#0B0B0C] disabled:cursor-not-allowed disabled:opacity-65"
+              {/* Alertes globales (GitHub OAuth ou secours) */}
+              {loginError && (
+                <div
+                  role="alert"
+                  data-error-kind={loginError.kind}
+                  className={`mt-6 flex items-start gap-2.5 rounded-lg border px-4 py-3 text-xs leading-relaxed ${
+                    loginError.kind === 'invalid_credentials' ||
+                    loginError.kind === 'unauthorized_account'
+                      ? 'border-red-500/40 bg-red-500/12 text-red-200'
+                      : 'border-amber-400/40 bg-amber-400/10 text-amber-100'
+                  }`}
                 >
-                  {loginBusy && <Loader2 className="h-4 w-4 animate-spin" />}
-                  <span>{loginBusy ? loginStatusText : 'Se connecter'}</span>
-                </button>
+                  {loginError.kind === 'network_or_server' || loginError.kind === 'timeout' ? (
+                    <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                  ) : (
+                    <AlertTriangle
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${
+                        loginError.kind === 'invalid_credentials' ||
+                        loginError.kind === 'unauthorized_account'
+                          ? 'text-red-300'
+                          : 'text-amber-300'
+                      }`}
+                    />
+                  )}
+                  <span>{loginError.message}</span>
+                </div>
+              )}
 
+              {loginNotice && (
+                <p
+                  role="status"
+                  className="mt-6 rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-4 py-2.5 text-xs text-emerald-200"
+                >
+                  {loginNotice}
+                </p>
+              )}
+
+              {/* Connexion principale : GitHub OAuth (PKCE) */}
+              <div className="mt-7">
                 <button
                   type="button"
-                  disabled={loginBusy}
-                  onClick={handleSendResetEmail}
-                  className="w-full cursor-pointer pt-1 text-center text-xs text-[#BDB5A8] underline decoration-[#E8C877]/45 underline-offset-4 hover:text-[#E8C877] disabled:opacity-50"
+                  onClick={handleGitHubLogin}
+                  disabled={githubBusy || loginBusy}
+                  aria-busy={githubBusy}
+                  className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-full bg-accent-gradient py-3.5 text-xs font-semibold tracking-[0.2em] uppercase text-[#0B0B0C] transition-opacity disabled:cursor-not-allowed disabled:opacity-65"
                 >
-                  Première connexion ou mot de passe oublié ? Recevoir un lien par e-mail
+                  {githubBusy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4 fill-current"
+                    >
+                      <path d="M12 0.5C5.65 0.5 0.5 5.65 0.5 12c0 5.08 3.29 9.39 7.86 10.91 0.58 0.11 0.79-0.25 0.79-0.56 0-0.28-0.01-1.02-0.02-2-3.2 0.7-3.88-1.54-3.88-1.54-0.52-1.33-1.28-1.69-1.28-1.69-1.05-0.72 0.08-0.7 0.08-0.7 1.16 0.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36 0.96 0.1-0.75 0.4-1.26 0.73-1.55-2.55-0.29-5.24-1.28-5.24-5.69 0-1.26 0.45-2.29 1.19-3.09-0.12-0.29-0.52-1.46 0.11-3.05 0 0 0.97-0.31 3.18 1.18a11.05 11.05 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18 0.63 1.59 0.23 2.76 0.11 3.05 0.74 0.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68 0.41 0.36 0.78 1.06 0.78 2.14 0 1.55-0.01 2.79-0.01 3.17 0 0.31 0.21 0.68 0.8 0.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35 0.5 12 0.5Z" />
+                    </svg>
+                  )}
+                  <span>{githubBusy ? 'Redirection vers GitHub…' : 'Se connecter avec GitHub'}</span>
                 </button>
-              </form>
+                <p className="mt-2.5 text-center text-[11px] text-[#9E978B]">
+                  Authentification OAuth 2.0 (PKCE) via votre compte GitHub administrateur.
+                </p>
+              </div>
+
+              {/* Séparateur & Accès de secours e-mail/mot de passe (verrouillé au même compte) */}
+              <div className="mt-7 border-t border-[#F4EEE3]/12 pt-5">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordFallback((prev) => !prev)}
+                  aria-expanded={showPasswordFallback}
+                  className="flex w-full cursor-pointer items-center justify-between text-left text-xs text-[#BDB5A8] hover:text-[#E8C877]"
+                >
+                  <span>Connexion de secours (e-mail et mot de passe)</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${showPasswordFallback ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showPasswordFallback && (
+                  <form onSubmit={handleLogin} className="mt-5 space-y-4">
+                    <div>
+                      <label htmlFor="admin-email" className="block text-[11px] tracking-[0.2em] uppercase text-[#BDB5A8]">
+                        E-mail administrateur
+                      </label>
+                      <input
+                        id="admin-email"
+                        type="email"
+                        autoComplete="username"
+                        required
+                        disabled={loginBusy || githubBusy}
+                        value={loginEmail}
+                        onChange={(e) => {
+                          setLoginEmail(e.target.value);
+                          if (loginError) setLoginError(null);
+                        }}
+                        className="mt-2 w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-2.5 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877] disabled:opacity-60"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="admin-pass" className="block text-[11px] tracking-[0.2em] uppercase text-[#BDB5A8]">
+                        Mot de passe
+                      </label>
+                      <div className="relative mt-2">
+                        <input
+                          id="admin-pass"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="current-password"
+                          required
+                          disabled={loginBusy || githubBusy}
+                          value={loginPassword}
+                          onChange={(e) => {
+                            setLoginPassword(e.target.value);
+                            if (loginError) setLoginError(null);
+                          }}
+                          className="w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] py-2.5 pl-4 pr-11 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877] disabled:opacity-60"
+                        />
+                        <button
+                          type="button"
+                          disabled={loginBusy || githubBusy}
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#BDB5A8] hover:text-[#E8C877] disabled:opacity-50"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loginBusy || githubBusy}
+                      aria-busy={loginBusy}
+                      className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[#E8C877]/50 bg-[#E8C877]/12 py-3 text-xs font-semibold tracking-[0.2em] uppercase text-[#E8C877] hover:bg-[#E8C877]/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loginBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+                      <span>{loginBusy ? loginStatusText : 'Se connecter par mot de passe'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={loginBusy || githubBusy}
+                      onClick={handleSendResetEmail}
+                      className="w-full cursor-pointer pt-1 text-center text-xs text-[#BDB5A8] underline decoration-[#E8C877]/45 underline-offset-4 hover:text-[#E8C877] disabled:opacity-50"
+                    >
+                      Mot de passe de secours oublié ? Recevoir un lien par e-mail
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           ) : roleCheckError ? (
             /* Erreur réseau/délai lors de la vérification du rôle : ne jamais confondre avec un accès refusé */
