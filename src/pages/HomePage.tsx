@@ -69,7 +69,11 @@ export const HomePage: React.FC<HomePageProps> = ({ locale, projects }) => {
       <main id="main-content">
         <HeroSection locale={locale} />
         <ManifestoSection locale={locale} />
-        <ServicesStage locale={locale} onSelectCategory={(cat) => setActiveCategory(cat)} />
+        <ServicesStage
+          locale={locale}
+          projects={projects}
+          onSelectCategory={(cat) => setActiveCategory(cat)}
+        />
         <WorksShowcase
           locale={locale}
           projects={projects}

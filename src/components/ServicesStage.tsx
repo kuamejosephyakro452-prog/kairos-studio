@@ -1,23 +1,83 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
-import type { Locale, ProjectCategory } from '@/types/portfolio';
+import type { Locale, Project, ProjectCategory } from '@/types/portfolio';
 import { ResponsivePicture } from './ResponsivePicture';
 import { Magnetic } from './Magnetic';
 
 interface ServicesStageProps {
   locale: Locale;
+  projects: Project[];
   onSelectCategory: (cat: ProjectCategory) => void;
 }
 
 /**
  * Scène 3 — Index interactif plein écran des 5 domaines.
- * Le survol/clic change dynamiquement l'ambiance chromatique de la scène et révèle un visuel signature.
+ * Les visuels affichés dans chaque scène proviennent EXCLUSIVEMENT des créations publiées
+ * dans l'espace d'administration (Supabase), afin qu'aucune création supprimée ou dépubliée
+ * ne puisse jamais apparaître.
  */
-export const ServicesStage: React.FC<ServicesStageProps> = ({ locale, onSelectCategory }) => {
+export const ServicesStage: React.FC<ServicesStageProps> = ({
+  locale,
+  projects,
+  onSelectCategory,
+}) => {
   const t = DICTIONARY[locale];
   const [activeIndex, setActiveIndex] = useState(0);
+  const [slideTick, setSlideTick] = useState(0);
   const activeService = t.services.items[activeIndex];
+
+  // Associe à chaque discipline uniquement les projets réellement publiés (jamais de visuel supprimé en dur)
+  const slidesByCategory = useMemo(() => {
+    const published = projects.filter(
+      (p) => p.status === 'published' && Boolean(p.cover_image_url || p.cover_asset_id)
+    );
+    const map = new Map<ProjectCategory, Project[]>();
+
+    t.services.items.forEach((srv, idx) => {
+      const matching = published.filter((p) => p.category === srv.id);
+      if (matching.length > 0) {
+        map.set(srv.id, matching);
+      } else if (published.length > 0) {
+        // Si une discipline n'a pas encore de projet publié, afficher uniquement un autre projet publié de l'admin
+        map.set(srv.id, [published[idx % published.length]]);
+      } else {
+        map.set(srv.id, []);
+      }
+    });
+
+    return map;
+  }, [projects, t.services.items]);
+
+  const activeSlides = slidesByCategory.get(activeService.id) ?? [];
+
+  // Remet le carrousel interne à 0 lors du changement de discipline
+  useEffect(() => {
+    setSlideTick(0);
+  }, [activeIndex]);
+
+  // Fait défiler en douceur les créations publiées de la discipline active (si > 1 création)
+  useEffect(() => {
+    if (activeSlides.length <= 1) return;
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setSlideTick((prev) => (prev + 1) % activeSlides.length);
+    }, 4_500);
+    return () => window.clearInterval(timer);
+  }, [activeSlides.length]);
+
+  const currentProject =
+    activeSlides.length > 0 ? activeSlides[slideTick % activeSlides.length] : null;
+  const currentProjectTitle = currentProject
+    ? locale === 'fr'
+      ? currentProject.title_fr
+      : currentProject.title_en
+    : null;
 
   const handleFilterAndScroll = (cat: ProjectCategory) => {
     onSelectCategory(cat);
@@ -159,42 +219,85 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({ locale, onSelectCa
               </div>
 
               <div className="relative aspect-[4/4.3] overflow-hidden rounded-2xl bg-[#07070B]">
-                {t.services.items.map((srv, idx) => (
-                  <div
-                    key={srv.id}
-                    aria-hidden={idx !== activeIndex}
-                    className={`absolute inset-0 transition-all duration-700 ease-out ${
-                      idx === activeIndex
-                        ? 'scale-100 opacity-100'
-                        : 'pointer-events-none scale-105 opacity-0'
-                    }`}
-                    style={{
-                      clipPath:
-                        idx === activeIndex ? 'inset(0% 0% 0% 0%)' : 'inset(8% 0% 8% 0%)',
-                    }}
-                  >
-                    <ResponsivePicture
-                      assetId={srv.previewAssetId}
-                      alt={srv.title}
-                      sizes="(max-width: 1024px) 92vw, 40vw"
-                      className="h-full w-full"
-                      imgClassName="h-full w-full object-cover object-top"
-                    />
+                {t.services.items.map((srv, idx) => {
+                  const srvSlides = slidesByCategory.get(srv.id) ?? [];
+                  const srvProject =
+                    srvSlides.length > 0
+                      ? srvSlides[(idx === activeIndex ? slideTick : 0) % srvSlides.length]
+                      : null;
+
+                  return (
                     <div
-                      className="pointer-events-none absolute inset-0"
+                      key={srv.id}
+                      aria-hidden={idx !== activeIndex}
+                      className={`absolute inset-0 transition-all duration-700 ease-out ${
+                        idx === activeIndex
+                          ? 'scale-100 opacity-100'
+                          : 'pointer-events-none scale-105 opacity-0'
+                      }`}
                       style={{
-                        background: `linear-gradient(180deg, transparent 48%, rgba(7,7,11,0.85) 100%)`,
+                        clipPath:
+                          idx === activeIndex ? 'inset(0% 0% 0% 0%)' : 'inset(8% 0% 8% 0%)',
                       }}
-                    />
+                    >
+                      {srvProject ? (
+                        <ResponsivePicture
+                          key={srvProject.id}
+                          assetId={srvProject.cover_asset_id}
+                          fallbackUrl={srvProject.cover_image_url}
+                          alt={
+                            (locale === 'fr'
+                              ? srvProject.cover_image_alt_fr || srvProject.title_fr
+                              : srvProject.cover_image_alt_en || srvProject.title_en) || srv.title
+                          }
+                          sizes="(max-width: 1024px) 92vw, 40vw"
+                          className="h-full w-full"
+                          imgClassName="h-full w-full object-cover object-top transition-opacity duration-500"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-[var(--bg-elevated)] font-mono-tech text-xs tracking-[0.2em] uppercase text-[var(--text-muted)]">
+                          KAIROS STUDIO
+                        </div>
+                      )}
+                      <div
+                        className="pointer-events-none absolute inset-0"
+                        style={{
+                          background: `linear-gradient(180deg, transparent 48%, rgba(7,7,11,0.85) 100%)`,
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+
+                {activeSlides.length > 1 && (
+                  <div className="absolute top-4 right-4 left-4 z-10 flex items-center gap-1.5">
+                    {activeSlides.map((slide, sIdx) => {
+                      const isCurrent = sIdx === slideTick % activeSlides.length;
+                      return (
+                        <button
+                          key={slide.id}
+                          type="button"
+                          onClick={() => setSlideTick(sIdx)}
+                          aria-label={locale === 'fr' ? slide.title_fr : slide.title_en}
+                          className="h-1 flex-1 cursor-pointer rounded-full transition-opacity"
+                          style={{
+                            backgroundColor: isCurrent ? activeService.ambientColor : '#FFFFFF',
+                            opacity: isCurrent ? 1 : 0.35,
+                          }}
+                        />
+                      );
+                    })}
                   </div>
-                ))}
+                )}
 
                 <div className="absolute right-5 bottom-5 left-5 z-10 flex items-end justify-between gap-4 text-white">
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-display text-2xl font-bold leading-tight">
                       {activeService.title}
                     </p>
-                    <p className="mt-1 text-xs text-white/80">{activeService.tagline}</p>
+                    <p className="mt-1 truncate text-xs text-white/85">
+                      {currentProjectTitle ?? activeService.tagline}
+                    </p>
                   </div>
                   <button
                     type="button"
