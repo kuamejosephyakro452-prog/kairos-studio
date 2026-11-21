@@ -88,6 +88,7 @@ export async function fetchPublishedProjects(): Promise<{
     const remoteProjects = data.map((row) => normalizeRow(row as Record<string, unknown>));
 
     const snapshotBySlug = new Map(fallback.map((p) => [p.slug, p]));
+    const remoteSlugs = new Set(remoteProjects.map((p) => p.slug));
     const enriched = remoteProjects.map((proj) => {
       const local = snapshotBySlug.get(proj.slug);
       if (!local) return proj;
@@ -101,7 +102,13 @@ export async function fetchPublishedProjects(): Promise<{
       };
     });
 
-    return { projects: enriched, source: 'supabase' };
+    // Inclure automatiquement les nouvelles publications statiques pas encore synchronisées dans Supabase
+    const missingFromRemote = fallback.filter((p) => !remoteSlugs.has(p.slug));
+    const merged = [...enriched, ...missingFromRemote].sort(
+      (a, b) => a.sort_order - b.sort_order
+    );
+
+    return { projects: merged, source: 'supabase' };
   } catch {
     return { projects: fallback, source: 'snapshot' };
   }

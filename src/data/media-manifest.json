@@ -643,5 +643,155 @@
         "avif": "media/images/tpl-audio-product-446w.avif"
       }
     ]
+  },
+  "col26-moisson": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/col26-moisson-480w.webp",
+        "avif": "media/images/col26-moisson-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/col26-moisson-960w.webp",
+        "avif": "media/images/col26-moisson-960w.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/col26-moisson-1600w.webp",
+        "avif": "media/images/col26-moisson-1600w.avif"
+      }
+    ]
+  },
+  "col26-kiwi": {
+    "width": 1200,
+    "height": 1200,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/col26-kiwi-480w.webp",
+        "avif": "media/images/col26-kiwi-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/col26-kiwi-960w.webp",
+        "avif": "media/images/col26-kiwi-960w.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1200,
+        "webp": "media/images/col26-kiwi-1200w.webp",
+        "avif": "media/images/col26-kiwi-1200w.avif"
+      }
+    ]
+  },
+  "col26-agir-vert": {
+    "width": 1200,
+    "height": 1800,
+    "aspectRatio": 0.6667,
+    "variants": [
+      {
+        "width": 480,
+        "height": 720,
+        "webp": "media/images/col26-agir-vert-480w.webp",
+        "avif": "media/images/col26-agir-vert-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 1440,
+        "webp": "media/images/col26-agir-vert-960w.webp",
+        "avif": "media/images/col26-agir-vert-960w.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1800,
+        "webp": "media/images/col26-agir-vert-1200w.webp",
+        "avif": "media/images/col26-agir-vert-1200w.avif"
+      }
+    ]
+  },
+  "col26-sans-sommeil": {
+    "width": 1200,
+    "height": 1200,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/col26-sans-sommeil-480w.webp",
+        "avif": "media/images/col26-sans-sommeil-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/col26-sans-sommeil-960w.webp",
+        "avif": "media/images/col26-sans-sommeil-960w.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1200,
+        "webp": "media/images/col26-sans-sommeil-1200w.webp",
+        "avif": "media/images/col26-sans-sommeil-1200w.avif"
+      }
+    ]
+  },
+  "col26-cap-essentiel": {
+    "width": 1200,
+    "height": 1500,
+    "aspectRatio": 0.8,
+    "variants": [
+      {
+        "width": 480,
+        "height": 600,
+        "webp": "media/images/col26-cap-essentiel-480w.webp",
+        "avif": "media/images/col26-cap-essentiel-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 1200,
+        "webp": "media/images/col26-cap-essentiel-960w.webp",
+        "avif": "media/images/col26-cap-essentiel-960w.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1500,
+        "webp": "media/images/col26-cap-essentiel-1200w.webp",
+        "avif": "media/images/col26-cap-essentiel-1200w.avif"
+      }
+    ]
+  },
+  "col26-showreel-poster": {
+    "width": 1280,
+    "height": 720,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/col26-showreel-poster-480w.webp",
+        "avif": "media/images/col26-showreel-poster-480w.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/col26-showreel-poster-960w.webp",
+        "avif": "media/images/col26-showreel-poster-960w.avif"
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "webp": "media/images/col26-showreel-poster-1280w.webp",
+        "avif": "media/images/col26-showreel-poster-1280w.avif"
+      }
+    ]
   }
 }
