@@ -130,6 +130,7 @@ export const AdminPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordFallback, setShowPasswordFallback] = useState(false);
   const [githubBusy, setGithubBusy] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
   const [oauthProcessing, setOauthProcessing] = useState(false);
   const [loginError, setLoginError] = useState<ClassifiedAuthError | null>(null);
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
@@ -568,18 +569,55 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    if (logoutBusy) return;
+    setLogoutBusy(true);
+
+    // 1. Nettoyage immédiat de l'état mémoire et UI (ne jamais bloquer l'utilisateur sur un timeout réseau)
     verifiedAdminUserIdRef.current = null;
+    lastSessionRef.current = null;
+    loginInFlightRef.current = false;
     clearAdminRoleCache();
+
+    const resetLocalUi = () => {
+      setAuthenticated(false);
+      setIsAdmin(false);
+      setAdminEmail(null);
+      setRoleCheckError(null);
+      setLoginError(null);
+      setLoginNotice(null);
+      setFeedback(null);
+      setProjects([]);
+      setMessages([]);
+      setMessagesLoaded(false);
+      setUnreadCountState(0);
+      setEditing(null);
+      setAuthLoading(false);
+      setOauthProcessing(false);
+      setRecoveryMode(false);
+    };
+
     const client = getSupabaseClient();
-    if (client) await client.auth.signOut();
-    setAuthenticated(false);
-    setIsAdmin(false);
-    setRoleCheckError(null);
-    setProjects([]);
-    setMessages([]);
-    setMessagesLoaded(false);
-    setUnreadCountState(0);
-    setEditing(null);
+    try {
+      if (client) {
+        // 1. Révocation serveur best-effort bornée à 2 s (utilise encore le token actif)
+        await Promise.race([
+          client.auth.signOut({ scope: 'global' }).catch(() => undefined),
+          new Promise((resolve) => setTimeout(resolve, 2_000)),
+        ]);
+        // 2. Révocation locale garantie (sans réseau) pour purger la session SDK en mémoire et stockage
+        await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      }
+    } finally {
+      // Garde-fou stockage local (session + éventuel PKCE code verifier)
+      try {
+        localStorage.removeItem('kairos-studio-auth');
+        localStorage.removeItem('kairos-studio-auth-code-verifier');
+      } catch {
+        // ignore
+      }
+      resetLocalUi();
+      setLogoutBusy(false);
+    }
   };
 
   const openNewProject = () => {
@@ -859,11 +897,16 @@ export const AdminPage: React.FC = () => {
               {authenticated && (
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#F4EEE3]/20 px-4 py-1.5 text-xs font-medium tracking-[0.14em] uppercase text-[#F4EEE3] hover:border-[#E8C877] hover:text-[#E8C877]"
+                  disabled={logoutBusy}
+                  onClick={() => void handleLogout()}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#F4EEE3]/20 px-4 py-1.5 text-xs font-medium tracking-[0.14em] uppercase text-[#F4EEE3] hover:border-[#E8C877] hover:text-[#E8C877] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span>Déconnexion</span>
+                  {logoutBusy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <LogOut className="h-3.5 w-3.5" />
+                  )}
+                  <span>{logoutBusy ? 'Déconnexion…' : 'Déconnexion'}</span>
                 </button>
               )}
             </div>
@@ -1091,10 +1134,11 @@ export const AdminPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="cursor-pointer rounded-full border border-[#F4EEE3]/25 px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase"
+                  disabled={logoutBusy}
+                  onClick={() => void handleLogout()}
+                  className="cursor-pointer rounded-full border border-[#F4EEE3]/25 px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase disabled:opacity-60"
                 >
-                  Se déconnecter
+                  {logoutBusy ? 'Déconnexion…' : 'Se déconnecter'}
                 </button>
               </div>
             </div>
@@ -1108,10 +1152,11 @@ export const AdminPage: React.FC = () => {
               </p>
               <button
                 type="button"
-                onClick={handleLogout}
-                className="mt-6 cursor-pointer rounded-full border border-[#F4EEE3]/25 px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase"
+                disabled={logoutBusy}
+                onClick={() => void handleLogout()}
+                className="mt-6 cursor-pointer rounded-full border border-[#F4EEE3]/25 px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase disabled:opacity-60"
               >
-                Se déconnecter
+                {logoutBusy ? 'Déconnexion…' : 'Se déconnecter'}
               </button>
             </div>
           ) : (
