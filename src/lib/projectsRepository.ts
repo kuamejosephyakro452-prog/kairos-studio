@@ -1,4 +1,6 @@
+import type { Session } from '@supabase/supabase-js';
 import { PUBLISHED_PROJECTS_SNAPSHOT } from '@/data/projects.snapshot';
+import { classifyAuthError, withTimeout, type ClassifiedAuthError } from '@/lib/adminAuth';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { ContactMessage, Locale, Project } from '@/types/portfolio';
 
@@ -145,33 +147,170 @@ export async function submitContactMessage(
  * ADMINISTRATION (Auth + RLS Supabase)
  * ============================================================================ */
 
-export async function checkIsAdminUser(): Promise<{
+export interface AdminUserStatus {
   authenticated: boolean;
   isAdmin: boolean;
   email: string | null;
-}> {
+  userId: string | null;
+  roleCheckError: ClassifiedAuthError | null;
+}
+
+// Cache mémoire du résultat de rôle par user_id pour éviter les vérifications répétées
+// lors des rafraîchissements de token (TOKEN_REFRESHED) et retours d'onglet.
+let cachedAdminRole: { userId: string; isAdmin: boolean } | null = null;
+let inflightRoleCheck: { userId: string; promise: Promise<AdminUserStatus> } | null = null;
+
+export function clearAdminRoleCache(): void {
+  cachedAdminRole = null;
+  inflightRoleCheck = null;
+}
+
+export async function checkIsAdminUser(
+  providedSession?: Session | null,
+  options?: { force?: boolean }
+): Promise<AdminUserStatus> {
   const client = getSupabaseClient();
-  if (!client) return { authenticated: false, isAdmin: false, email: null };
-
-  const {
-    data: { session },
-  } = await client.auth.getSession();
-
-  if (!session?.user) {
-    return { authenticated: false, isAdmin: false, email: null };
+  if (!client) {
+    return {
+      authenticated: false,
+      isAdmin: false,
+      email: null,
+      userId: null,
+      roleCheckError: null,
+    };
   }
 
-  const { data, error } = await client
-    .from('admin_users')
-    .select('user_id, email')
-    .eq('user_id', session.user.id)
-    .maybeSingle();
+  let session: Session | null = providedSession ?? null;
+  if (providedSession === undefined) {
+    const { data, error } = await withTimeout(() => client.auth.getSession(), 10_000);
+    if (error) {
+      return {
+        authenticated: false,
+        isAdmin: false,
+        email: null,
+        userId: null,
+        roleCheckError: classifyAuthError(error),
+      };
+    }
+    session = data.session;
+  }
 
-  return {
-    authenticated: true,
-    isAdmin: Boolean(!error && data),
-    email: session.user.email ?? null,
+  if (!session?.user) {
+    clearAdminRoleCache();
+    return {
+      authenticated: false,
+      isAdmin: false,
+      email: null,
+      userId: null,
+      roleCheckError: null,
+    };
+  }
+
+  const userId = session.user.id;
+  const email = session.user.email ?? null;
+
+  if (!options?.force && cachedAdminRole && cachedAdminRole.userId === userId) {
+    return {
+      authenticated: true,
+      isAdmin: cachedAdminRole.isAdmin,
+      email,
+      userId,
+      roleCheckError: null,
+    };
+  }
+
+  // Déduplique les vérifications concurrentes pour le même user_id (1 seule requête réseau)
+  if (!options?.force && inflightRoleCheck && inflightRoleCheck.userId === userId) {
+    return inflightRoleCheck.promise;
+  }
+
+  const queryRole = async (): Promise<AdminUserStatus> => {
+    const maxAttempts = 2;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const { data, error } = await withTimeout(
+          async () =>
+            client
+              .from('admin_users')
+              .select('user_id')
+              .eq('user_id', userId)
+              .maybeSingle(),
+          10_000
+        );
+
+        if (!error) {
+          const isAdmin = Boolean(data?.user_id);
+          cachedAdminRole = { userId, isAdmin };
+          return {
+            authenticated: true,
+            isAdmin,
+            email,
+            userId,
+            roleCheckError: null,
+          };
+        }
+
+        const classified = classifyAuthError(error);
+        if (classified.retryable && attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 750));
+          continue;
+        }
+
+        // Ne jamais confondre une erreur réseau/serveur avec un refus de rôle admin
+        return {
+          authenticated: true,
+          isAdmin: false,
+          email,
+          userId,
+          roleCheckError: classified,
+        };
+      } catch (caught) {
+        const classified = classifyAuthError(caught);
+        if (classified.retryable && attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 750));
+          continue;
+        }
+        return {
+          authenticated: true,
+          isAdmin: false,
+          email,
+          userId,
+          roleCheckError: classified,
+        };
+      }
+    }
+
+    return {
+      authenticated: true,
+      isAdmin: false,
+      email,
+      userId,
+      roleCheckError: {
+        kind: 'network_or_server',
+        message: 'Serveur indisponible ou réseau instable, réessayez dans un instant.',
+        retryable: true,
+      },
+    };
   };
+
+  const promise = queryRole().finally(() => {
+    if (inflightRoleCheck?.userId === userId) {
+      inflightRoleCheck = null;
+    }
+  });
+  inflightRoleCheck = { userId, promise };
+  return promise;
+}
+
+export async function fetchUnreadMessagesCountAdmin(): Promise<number> {
+  const client = getSupabaseClient();
+  if (!client) return 0;
+  const { count, error } = await client
+    .from('contact_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_read', false);
+  if (error) return 0;
+  return count ?? 0;
 }
 
 export async function fetchAllProjectsAdmin(): Promise<Project[]> {

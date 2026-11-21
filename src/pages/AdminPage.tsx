@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { Session } from '@supabase/supabase-js';
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -11,26 +13,36 @@ import {
   ImagePlus,
   Inbox,
   Layers,
+  Loader2,
   Lock,
   LogOut,
   Mail,
   MessageCircle,
   Pencil,
+  RefreshCw,
   Save,
   ShieldAlert,
   Trash2,
   Upload,
   Video,
+  WifiOff,
   X,
 } from 'lucide-react';
-import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseClient, isSupabaseConfigured, prewarmSupabaseAuth } from '@/lib/supabase';
+import {
+  classifyAuthError,
+  signInAdminWithResilience,
+  type ClassifiedAuthError,
+} from '@/lib/adminAuth';
 import {
   checkIsAdminUser,
+  clearAdminRoleCache,
   deleteAllDemoProjectsAdmin,
   deleteMessageAdmin,
   deleteProjectAdmin,
   fetchAllProjectsAdmin,
   fetchContactMessagesAdmin,
+  fetchUnreadMessagesCountAdmin,
   saveProjectAdmin,
   toggleMessageReadAdmin,
   updateProjectOrderAdmin,
@@ -99,16 +111,24 @@ export const AdminPage: React.FC = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
+  const [roleCheckError, setRoleCheckError] = useState<ClassifiedAuthError | null>(null);
 
   // Formulaire de connexion & récupération mot de passe
   const [loginEmail, setLoginEmail] = useState('kuamejosephyakro452@gmail.com');
   const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<ClassifiedAuthError | null>(null);
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [loginBusy, setLoginBusy] = useState(false);
+  const [loginStatusText, setLoginStatusText] = useState('Connexion en cours…');
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Verrous synchrones pour éviter les doubles requêtes (clics multiples & events auth)
+  const loginInFlightRef = useRef(false);
+  const verifiedAdminUserIdRef = useRef<string | null>(null);
+  const lastSessionRef = useRef<Session | null>(null);
 
   // Données admin
   const [activeTab, setActiveTab] = useState<'projects' | 'messages'>('projects');
@@ -117,6 +137,9 @@ export const AdminPage: React.FC = () => {
   >('all');
   const [projects, setProjects] = useState<Project[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [unreadCountState, setUnreadCountState] = useState(0);
   const [dataBusy, setDataBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -128,67 +151,216 @@ export const AdminPage: React.FC = () => {
 
   const catLabels = DICTIONARY.fr.categories;
 
-  const refreshAdminState = async () => {
-    setAuthLoading(true);
-    try {
-      const status = await checkIsAdminUser();
-      setAuthenticated(status.authenticated);
-      setIsAdmin(status.isAdmin);
-      setAdminEmail(status.email);
-      if (status.authenticated && status.isAdmin) {
-        await loadAdminData();
-      }
-    } catch {
-      setAuthenticated(false);
-      setIsAdmin(false);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const loadAdminData = async () => {
+  /**
+   * Chargement initial minimal : projets + simple compteur HEAD des messages non lus.
+   * Les messages complets ne sont chargés qu'à l'ouverture de l'onglet Messages.
+   */
+  const loadAdminData = useCallback(async (options?: { includeMessages?: boolean }) => {
     setDataBusy(true);
     try {
-      const [projs, msgs] = await Promise.all([
+      const [projs, unread] = await Promise.all([
         fetchAllProjectsAdmin(),
-        fetchContactMessagesAdmin(),
+        fetchUnreadMessagesCountAdmin(),
       ]);
       setProjects(projs);
-      setMessages(msgs);
+      setUnreadCountState(unread);
+      if (options?.includeMessages) {
+        const msgs = await fetchContactMessagesAdmin();
+        setMessages(msgs);
+        setMessagesLoaded(true);
+        setUnreadCountState(msgs.filter((m) => !m.is_read).length);
+      }
     } catch (err) {
+      const classified = classifyAuthError(err);
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'Erreur de chargement Supabase.',
+        text:
+          classified.kind === 'network_or_server' || classified.kind === 'timeout'
+            ? classified.message
+            : err instanceof Error
+              ? err.message
+              : 'Erreur de chargement Supabase.',
       });
     } finally {
       setDataBusy(false);
     }
-  };
+  }, []);
+
+  const loadMessagesOnly = useCallback(async () => {
+    setMessagesLoading(true);
+    try {
+      const msgs = await fetchContactMessagesAdmin();
+      setMessages(msgs);
+      setMessagesLoaded(true);
+      setUnreadCountState(msgs.filter((m) => !m.is_read).length);
+    } catch (err) {
+      const classified = classifyAuthError(err);
+      setFeedback({
+        type: 'err',
+        text:
+          classified.kind === 'network_or_server' || classified.kind === 'timeout'
+            ? classified.message
+            : err instanceof Error
+              ? err.message
+              : 'Erreur lors du chargement des messages.',
+      });
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  const applySessionState = useCallback(
+    async (
+      session: Session | null,
+      options?: { showFullLoader?: boolean; forceRoleCheck?: boolean }
+    ) => {
+      lastSessionRef.current = session;
+      if (!session?.user) {
+        verifiedAdminUserIdRef.current = null;
+        clearAdminRoleCache();
+        setAuthenticated(false);
+        setIsAdmin(false);
+        setAdminEmail(null);
+        setRoleCheckError(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Si ce même admin est déjà validé et qu'on ne force pas, ne jamais relancer de cycle complet
+      if (!options?.forceRoleCheck && verifiedAdminUserIdRef.current === session.user.id) {
+        setAuthenticated(true);
+        setIsAdmin(true);
+        setAdminEmail(session.user.email ?? null);
+        setRoleCheckError(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      if (options?.showFullLoader) {
+        setAuthLoading(true);
+      }
+
+      try {
+        const status = await checkIsAdminUser(session, { force: options?.forceRoleCheck });
+        setAuthenticated(status.authenticated);
+        setAdminEmail(status.email);
+        setRoleCheckError(status.roleCheckError);
+
+        if (status.roleCheckError) {
+          setIsAdmin(false);
+          verifiedAdminUserIdRef.current = null;
+          return;
+        }
+
+        setIsAdmin(status.isAdmin);
+        if (status.authenticated && status.isAdmin) {
+          verifiedAdminUserIdRef.current = status.userId;
+          // L'interface admin s'affiche immédiatement pendant que les projets chargent
+          setAuthLoading(false);
+          await loadAdminData();
+        } else {
+          verifiedAdminUserIdRef.current = null;
+        }
+      } catch (err) {
+        setAuthenticated(true);
+        setIsAdmin(false);
+        setRoleCheckError(classifyAuthError(err));
+      } finally {
+        setAuthLoading(false);
+      }
+    },
+    [loadAdminData]
+  );
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
       setRecoveryMode(true);
     }
-    refreshAdminState();
+
+    // Préchauffage non bloquant de la connexion TLS vers Supabase Auth
+    prewarmSupabaseAuth();
+
     const client = getSupabaseClient();
-    if (!client) return;
+    if (!client) {
+      setAuthLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    let initialHandled = false;
+
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange((event) => {
+    } = client.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
       if (event === 'PASSWORD_RECOVERY') {
         setRecoveryMode(true);
       }
-      refreshAdminState();
+
+      if (event === 'INITIAL_SESSION') {
+        initialHandled = true;
+        void applySessionState(session, { showFullLoader: Boolean(session) });
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        verifiedAdminUserIdRef.current = null;
+        clearAdminRoleCache();
+        setAuthenticated(false);
+        setIsAdmin(false);
+        setAdminEmail(null);
+        setRoleCheckError(null);
+        setProjects([]);
+        setMessages([]);
+        setMessagesLoaded(false);
+        setUnreadCountState(0);
+        setEditing(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Sur TOKEN_REFRESHED : garder l'UI intacte sans relancer de vérification réseau ni loader
+      if (event === 'TOKEN_REFRESHED') {
+        lastSessionRef.current = session;
+        return;
+      }
+
+      // Sur SIGNED_IN : si handleLogin gère déjà la connexion en cours, ne pas dupliquer
+      if (event === 'SIGNED_IN') {
+        if (loginInFlightRef.current) return;
+        void applySessionState(session, { showFullLoader: false });
+      }
     });
-    return () => subscription.unsubscribe();
-  }, []);
+
+    // Garde-fou au cas où INITIAL_SESSION tarderait sur un navigateur atypique
+    const fallbackTimer = setTimeout(() => {
+      if (!mounted || initialHandled) return;
+      initialHandled = true;
+      void client.auth
+        .getSession()
+        .then(({ data }) => {
+          if (mounted) void applySessionState(data.session, { showFullLoader: false });
+        })
+        .catch(() => {
+          if (mounted) setAuthLoading(false);
+        });
+    }, 3_000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(fallbackTimer);
+      subscription.unsubscribe();
+    };
+  }, [applySessionState]);
 
   const handleSendResetEmail = async () => {
+    if (loginInFlightRef.current || loginBusy) return;
     setLoginError(null);
     setLoginNotice(null);
     const client = getSupabaseClient();
     if (!client) return;
     setLoginBusy(true);
+    setLoginStatusText('Envoi du lien sécurisé…');
     try {
       const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
       const redirectTo = `${window.location.origin}${base}/admin`;
@@ -196,14 +368,17 @@ export const AdminPage: React.FC = () => {
         redirectTo,
       });
       if (error) {
-        setLoginError('Impossible d’envoyer l’e-mail de réinitialisation pour le moment.');
+        setLoginError(classifyAuthError(error));
       } else {
         setLoginNotice(
           'Un lien sécurisé de définition / réinitialisation du mot de passe a été envoyé à votre adresse administrateur.'
         );
       }
+    } catch (caught) {
+      setLoginError(classifyAuthError(caught));
     } finally {
       setLoginBusy(false);
+      setLoginStatusText('Connexion en cours…');
     }
   };
 
@@ -244,37 +419,67 @@ export const AdminPage: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Protection synchrone anti double-clic / soumissions simultanées
+    if (loginInFlightRef.current || loginBusy) return;
+
     setLoginError(null);
+    setLoginNotice(null);
+
     const client = getSupabaseClient();
     if (!client) {
-      setLoginError('Connexion impossible : Supabase n’est pas encore configuré.');
+      setLoginError({
+        kind: 'unconfigured',
+        message: 'Connexion impossible : Supabase n’est pas encore configuré.',
+        retryable: false,
+      });
       return;
     }
 
+    loginInFlightRef.current = true;
     setLoginBusy(true);
+    setLoginStatusText('Connexion sécurisée…');
+
     try {
-      const { error } = await client.auth.signInWithPassword({
-        email: loginEmail.trim(),
-        password: loginPassword,
+      const result = await signInAdminWithResilience(client, loginEmail, loginPassword, {
+        maxNetworkRetries: 2,
+        onRetrying: (attempt) => {
+          setLoginStatusText(`Réseau instable — tentative ${attempt}/3…`);
+        },
       });
-      if (error) {
-        setLoginError('Identifiants invalides ou accès refusé.');
-      } else {
-        setLoginPassword('');
-        await refreshAdminState();
+
+      if (result.error || !result.session) {
+        setLoginError(
+          result.error ?? {
+            kind: 'unknown',
+            message: 'Une erreur inattendue est survenue lors de la connexion. Réessayez.',
+            retryable: false,
+          }
+        );
+        return;
       }
+
+      setLoginPassword('');
+      setLoginStatusText('Vérification des droits…');
+      await applySessionState(result.session, { showFullLoader: false, forceRoleCheck: true });
     } finally {
+      loginInFlightRef.current = false;
       setLoginBusy(false);
+      setLoginStatusText('Connexion en cours…');
     }
   };
 
   const handleLogout = async () => {
+    verifiedAdminUserIdRef.current = null;
+    clearAdminRoleCache();
     const client = getSupabaseClient();
     if (client) await client.auth.signOut();
     setAuthenticated(false);
     setIsAdmin(false);
+    setRoleCheckError(null);
     setProjects([]);
     setMessages([]);
+    setMessagesLoaded(false);
+    setUnreadCountState(0);
     setEditing(null);
   };
 
@@ -492,7 +697,9 @@ export const AdminPage: React.FC = () => {
     return true;
   });
 
-  const unreadCount = messages.filter((m) => !m.is_read).length;
+  const unreadCount = messagesLoaded
+    ? messages.filter((m) => !m.is_read).length
+    : unreadCountState;
   const demoTotal = projects.filter((p) => p.demo).length;
   const unverifiedTotal = projects.filter((p) => p.origine_non_verifiee).length;
 
@@ -594,30 +801,71 @@ export const AdminPage: React.FC = () => {
                   <input
                     id="admin-email"
                     type="email"
+                    autoComplete="username"
                     required
+                    disabled={loginBusy}
                     value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    className="mt-2 w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-3 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877]"
+                    onChange={(e) => {
+                      setLoginEmail(e.target.value);
+                      if (loginError) setLoginError(null);
+                    }}
+                    className="mt-2 w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-3 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877] disabled:opacity-60"
                   />
                 </div>
                 <div>
                   <label htmlFor="admin-pass" className="block text-[11px] tracking-[0.2em] uppercase text-[#BDB5A8]">
                     Mot de passe
                   </label>
-                  <input
-                    id="admin-pass"
-                    type="password"
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="mt-2 w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] px-4 py-3 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877]"
-                  />
+                  <div className="relative mt-2">
+                    <input
+                      id="admin-pass"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      required
+                      disabled={loginBusy}
+                      value={loginPassword}
+                      onChange={(e) => {
+                        setLoginPassword(e.target.value);
+                        if (loginError) setLoginError(null);
+                      }}
+                      className="w-full rounded-lg border border-[#F4EEE3]/18 bg-[#0B0B0C] py-3 pl-4 pr-11 text-sm text-[#F4EEE3] outline-none focus:border-[#E8C877] disabled:opacity-60"
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      disabled={loginBusy}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#BDB5A8] hover:text-[#E8C877] disabled:opacity-50"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
 
                 {loginError && (
-                  <p role="alert" className="rounded-lg border border-red-500/35 bg-red-500/10 px-4 py-2.5 text-xs text-red-300">
-                    {loginError}
-                  </p>
+                  <div
+                    role="alert"
+                    data-error-kind={loginError.kind}
+                    className={`flex items-start gap-2.5 rounded-lg border px-4 py-3 text-xs leading-relaxed ${
+                      loginError.kind === 'invalid_credentials'
+                        ? 'border-red-500/40 bg-red-500/12 text-red-200'
+                        : 'border-amber-400/40 bg-amber-400/10 text-amber-100'
+                    }`}
+                  >
+                    {loginError.kind === 'network_or_server' || loginError.kind === 'timeout' ? (
+                      <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                    ) : (
+                      <AlertTriangle
+                        className={`mt-0.5 h-4 w-4 shrink-0 ${
+                          loginError.kind === 'invalid_credentials'
+                            ? 'text-red-300'
+                            : 'text-amber-300'
+                        }`}
+                      />
+                    )}
+                    <span>{loginError.message}</span>
+                  </div>
                 )}
 
                 {loginNotice && (
@@ -629,9 +877,11 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loginBusy}
-                  className="w-full cursor-pointer rounded-full bg-accent-gradient py-3.5 text-xs font-semibold tracking-[0.22em] uppercase text-[#0B0B0C] disabled:opacity-60"
+                  aria-busy={loginBusy}
+                  className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-accent-gradient py-3.5 text-xs font-semibold tracking-[0.22em] uppercase text-[#0B0B0C] disabled:cursor-not-allowed disabled:opacity-65"
                 >
-                  {loginBusy ? 'Vérification...' : 'Se connecter'}
+                  {loginBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <span>{loginBusy ? loginStatusText : 'Se connecter'}</span>
                 </button>
 
                 <button
@@ -643,6 +893,35 @@ export const AdminPage: React.FC = () => {
                   Première connexion ou mot de passe oublié ? Recevoir un lien par e-mail
                 </button>
               </form>
+            </div>
+          ) : roleCheckError ? (
+            /* Erreur réseau/délai lors de la vérification du rôle : ne jamais confondre avec un accès refusé */
+            <div className="mx-auto max-w-lg rounded-2xl border border-amber-400/35 bg-[#141418] p-8 text-center">
+              <WifiOff className="mx-auto h-10 w-10 text-amber-300" />
+              <h1 className="mt-4 font-display text-3xl">Vérification interrompue</h1>
+              <p className="mt-2 text-sm text-[#BDB5A8]">{roleCheckError.message}</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    void applySessionState(lastSessionRef.current, {
+                      showFullLoader: true,
+                      forceRoleCheck: true,
+                    })
+                  }
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-accent-gradient px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase text-[#0B0B0C]"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Réessayer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="cursor-pointer rounded-full border border-[#F4EEE3]/25 px-6 py-2.5 text-xs font-semibold tracking-[0.18em] uppercase"
+                >
+                  Se déconnecter
+                </button>
+              </div>
             </div>
           ) : !isAdmin ? (
             /* Utilisateur connecté mais absent de admin_users => Accès refusé */
@@ -696,6 +975,9 @@ export const AdminPage: React.FC = () => {
                     onClick={() => {
                       setActiveTab('messages');
                       setEditing(null);
+                      if (!messagesLoaded && !messagesLoading) {
+                        void loadMessagesOnly();
+                      }
                     }}
                     className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold tracking-[0.16em] uppercase ${
                       activeTab === 'messages'
@@ -705,8 +987,12 @@ export const AdminPage: React.FC = () => {
                   >
                     <Inbox className="h-3.5 w-3.5" />
                     <span>
-                      Messages ({messages.length}
-                      {unreadCount > 0 ? ` · ${unreadCount} non lu${unreadCount > 1 ? 's' : ''}` : ''})
+                      Messages
+                      {messagesLoaded
+                        ? ` (${messages.length}${unreadCount > 0 ? ` · ${unreadCount} non lu${unreadCount > 1 ? 's' : ''}` : ''})`
+                        : unreadCount > 0
+                          ? ` (${unreadCount} non lu${unreadCount > 1 ? 's' : ''})`
+                          : ''}
                     </span>
                   </button>
                 </div>
@@ -1371,7 +1657,12 @@ export const AdminPage: React.FC = () => {
               {/* ONGLET MESSAGES REÇUS */}
               {activeTab === 'messages' && (
                 <div className="space-y-4">
-                  {messages.length === 0 ? (
+                  {messagesLoading ? (
+                    <div className="flex items-center justify-center gap-2.5 rounded-2xl border border-[#F4EEE3]/12 bg-[#141418] p-12 text-sm text-[#BDB5A8]">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#E8C877]" />
+                      <span>Chargement des messages…</span>
+                    </div>
+                  ) : messages.length === 0 ? (
                     <div className="rounded-2xl border border-[#F4EEE3]/12 bg-[#141418] p-12 text-center text-sm text-[#BDB5A8]">
                       Aucun message reçu pour le moment.
                     </div>
@@ -1432,7 +1723,7 @@ export const AdminPage: React.FC = () => {
                               type="button"
                               onClick={async () => {
                                 await toggleMessageReadAdmin(msg.id, !msg.is_read);
-                                await loadAdminData();
+                                await loadMessagesOnly();
                               }}
                               className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#F4EEE3]/18 px-3 py-1.5 text-xs hover:border-[#E8C877]"
                             >
@@ -1444,7 +1735,7 @@ export const AdminPage: React.FC = () => {
                               onClick={async () => {
                                 if (!window.confirm('Supprimer ce message ?')) return;
                                 await deleteMessageAdmin(msg.id);
-                                await loadAdminData();
+                                await loadMessagesOnly();
                               }}
                               className="cursor-pointer rounded-lg border border-red-500/30 p-1.5 text-red-300 hover:bg-red-500/20"
                             >

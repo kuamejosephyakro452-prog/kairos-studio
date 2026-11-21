@@ -38,8 +38,10 @@ jobs:
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://kuamejosephyakro452-prog.github.io/kairos-studio' }}
         run: npm run build
 
-      - name: Verify build integrity & security
-        run: npm run test:smoke
+      - name: Verify admin auth resilience & build integrity
+        run: |
+          npm run test:admin-auth
+          npm run test:smoke
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

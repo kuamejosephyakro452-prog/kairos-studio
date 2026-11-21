@@ -41,7 +41,7 @@ create policy "admin_users_self_select"
   on public.admin_users
   for select
   to authenticated
-  using (user_id = auth.uid());
+  using (user_id = (select auth.uid()));
 
 -- Aucune insertion/suppression publique sur admin_users (gérée uniquement via SQL Editor / service_role)
 
@@ -102,6 +102,7 @@ create table if not exists public.projects (
 );
 
 create index if not exists idx_projects_status_order on public.projects (status, sort_order asc, created_at desc);
+create index if not exists idx_projects_admin_order on public.projects (sort_order asc, created_at desc);
 create index if not exists idx_projects_category on public.projects (category);
 create index if not exists idx_projects_flags on public.projects (origine_non_verifiee, demo);
 
@@ -137,7 +138,7 @@ create policy "projects_auth_read"
   on public.projects
   for select
   to authenticated
-  using (status = 'published' or public.is_kairos_admin());
+  using (status = 'published' or (select public.is_kairos_admin()));
 
 -- Écriture réservée EXCLUSIVEMENT à l'admin vérifié
 drop policy if exists "projects_admin_insert" on public.projects;
@@ -145,22 +146,22 @@ create policy "projects_admin_insert"
   on public.projects
   for insert
   to authenticated
-  with check (public.is_kairos_admin());
+  with check ((select public.is_kairos_admin()));
 
 drop policy if exists "projects_admin_update" on public.projects;
 create policy "projects_admin_update"
   on public.projects
   for update
   to authenticated
-  using (public.is_kairos_admin())
-  with check (public.is_kairos_admin());
+  using ((select public.is_kairos_admin()))
+  with check ((select public.is_kairos_admin()));
 
 drop policy if exists "projects_admin_delete" on public.projects;
 create policy "projects_admin_delete"
   on public.projects
   for delete
   to authenticated
-  using (public.is_kairos_admin());
+  using ((select public.is_kairos_admin()));
 
 -- ----------------------------------------------------------------------------
 -- 3. Table des messages de contact
@@ -178,6 +179,7 @@ create table if not exists public.contact_messages (
 );
 
 create index if not exists idx_contact_messages_created on public.contact_messages (created_at desc);
+create index if not exists idx_contact_messages_unread on public.contact_messages (created_at desc) where is_read = false;
 
 alter table public.contact_messages enable row level security;
 
@@ -198,22 +200,22 @@ create policy "contact_messages_admin_select"
   on public.contact_messages
   for select
   to authenticated
-  using (public.is_kairos_admin());
+  using ((select public.is_kairos_admin()));
 
 drop policy if exists "contact_messages_admin_update" on public.contact_messages;
 create policy "contact_messages_admin_update"
   on public.contact_messages
   for update
   to authenticated
-  using (public.is_kairos_admin())
-  with check (public.is_kairos_admin());
+  using ((select public.is_kairos_admin()))
+  with check ((select public.is_kairos_admin()));
 
 drop policy if exists "contact_messages_admin_delete" on public.contact_messages;
 create policy "contact_messages_admin_delete"
   on public.contact_messages
   for delete
   to authenticated
-  using (public.is_kairos_admin());
+  using ((select public.is_kairos_admin()));
 
 -- ----------------------------------------------------------------------------
 -- 4. Bucket Storage pour les médias uploadés depuis l'admin

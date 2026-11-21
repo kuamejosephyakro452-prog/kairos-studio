@@ -72,7 +72,8 @@ Copiez `.env.example` vers `.env.local` pour le développement local (ne committ
 ## 5. Quotas, Sauvegarde & Domaine personnalisé
 
 - **GitHub Pages** : site complet ~50 Mo (limite ~1 Go), plus gros fichier ~14,3 Mo (limite 100 Mo).
-- **Supabase gratuit** : base 500 Mo, Storage 1 Go (plafond 25 Mo/fichier), auto-pause prévenue par `.github/workflows/keep-supabase-alive.yml` et mitigée par l’instantané statique `src/data/projects.snapshot.ts`.
+- **Supabase gratuit** : base 500 Mo, Storage 1 Go (plafond 25 Mo/fichier), état vérifié actif (non en pause). L'auto-pause est prévenue par `.github/workflows/keep-supabase-alive.yml` (exécution tous les 4 jours avec contrôle strict `HTTP 200` sur `/auth/v1/health` et `/rest/v1/projects`, retries automatiques et alerte d'échec si le projet est injoignable) et mitigée côté public par l’instantané statique `src/data/projects.snapshot.ts`.
+- **Optimisation connexion & RLS Admin** : l'administration (`/admin`) préchauffe la connexion TLS à l'ouverture, déduplique les appels de session/rôle (`admin_users`), distingue strictement les erreurs d'identifiants, limitation de tentatives (`429`), réseau/serveur (`5xx`) et délai dépassé (`timeout`), et charge les messages de contact à la demande. La migration non destructive `supabase/migrations/20261121_admin_perf_indexes.sql` peut être appliquée dans le SQL Editor Supabase pour ajouter les index dédiés et le pattern RLS InitPlan.
 - **Domaine personnalisé** : configurez le domaine dans **GitHub Settings → Pages**, pointez les enregistrements DNS (`A` + `CNAME www`), définissez `VITE_BASE_PATH=/` et `VITE_SITE_URL=https://votre-domaine.com` dans **GitHub Actions Variables**, puis relancez le déploiement.
 
 ---
