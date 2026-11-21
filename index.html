@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" data-palette="braise" data-font="syne">
+<html lang="fr" data-font="syne">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,25 +8,14 @@
       name="description"
       content="KAIROS STUDIO, dirigé par Joseph Kouamé — Studio créatif et numérique : design graphique, production audiovisuelle, communication digitale, solutions numériques / TIC et création de sites web."
     />
-    <meta name="theme-color" content="#07070B" />
+    <meta name="theme-color" content="#F3EEE6" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 
-    <!-- Anti-FOUC palette (?palette=braise|indigo|encre) + restauration route SPA GitHub Pages -->
+    <!-- Restauration route SPA GitHub Pages -->
     <script>
       (function () {
         try {
           var params = new URLSearchParams(location.search);
-          var qPal = params.get('palette');
-          var validPal = ['braise', 'indigo', 'encre'];
-          if (qPal && validPal.indexOf(qPal) !== -1) {
-            document.documentElement.setAttribute('data-palette', qPal);
-            localStorage.setItem('kairos-palette', qPal);
-          } else {
-            var savedPal = localStorage.getItem('kairos-palette');
-            if (savedPal && validPal.indexOf(savedPal) !== -1) {
-              document.documentElement.setAttribute('data-palette', savedPal);
-            }
-          }
           var qFont = params.get('font');
           if (qFont && ['syne', 'bricolage', 'fraunces'].indexOf(qFont) !== -1) {
             document.documentElement.setAttribute('data-font', qFont);

@@ -9,15 +9,14 @@ import { FounderStage } from '@/components/FounderStage';
 import { KineticMarquee } from '@/components/KineticMarquee';
 import { ContactSection } from '@/components/ContactSection';
 import { SeoHead } from '@/components/SeoHead';
-import type { Locale, PaletteId, Project, ProjectCategory } from '@/types/portfolio';
+import type { Locale, Project, ProjectCategory } from '@/types/portfolio';
 
 interface HomePageProps {
   locale: Locale;
-  palette: PaletteId;
   projects: Project[];
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ locale, palette, projects }) => {
+export const HomePage: React.FC<HomePageProps> = ({ locale, projects }) => {
   const t = DICTIONARY[locale];
   const [activeCategory, setActiveCategory] = useState<ProjectCategory | 'all'>('all');
   const location = useLocation();
@@ -68,7 +67,7 @@ export const HomePage: React.FC<HomePageProps> = ({ locale, palette, projects })
       />
 
       <main id="main-content">
-        <HeroSection locale={locale} palette={palette} />
+        <HeroSection locale={locale} />
         <ManifestoSection locale={locale} />
         <ServicesStage locale={locale} onSelectCategory={(cat) => setActiveCategory(cat)} />
         <WorksShowcase

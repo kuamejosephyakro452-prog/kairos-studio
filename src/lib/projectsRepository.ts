@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { PUBLISHED_PROJECTS_SNAPSHOT } from '@/data/projects.snapshot';
 import { classifyAuthError, withTimeout, type ClassifiedAuthError } from '@/lib/adminAuth';
+import { enrichRemoteProjectsWithLocalManifest } from '@/lib/projectSyncUtils';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { ContactMessage, Locale, Project } from '@/types/portfolio';
 
@@ -53,67 +54,146 @@ function normalizeRow(row: Record<string, unknown>): Project {
   };
 }
 
+export const PUBLIC_PROJECTS_CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const SESSION_CACHE_KEY = 'kairos-published-projects-cache-v2';
+export const PROJECTS_VERSION_STORAGE_KEY = 'kairos-projects-version';
+export const PROJECTS_UPDATED_EVENT = 'kairos:projects-updated';
+
+interface ProjectsCacheEntry {
+  ts: number;
+  projects: Project[];
+}
+
+let memoryProjectsCache: ProjectsCacheEntry | null = null;
+
+function readFreshProjectsCache(): Project[] | null {
+  const now = Date.now();
+  if (memoryProjectsCache && now - memoryProjectsCache.ts < PUBLIC_PROJECTS_CACHE_TTL_MS) {
+    return memoryProjectsCache.projects;
+  }
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ProjectsCacheEntry;
+    if (
+      parsed &&
+      typeof parsed.ts === 'number' &&
+      Array.isArray(parsed.projects) &&
+      now - parsed.ts < PUBLIC_PROJECTS_CACHE_TTL_MS
+    ) {
+      memoryProjectsCache = parsed;
+      return parsed.projects;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return null;
+}
+
+function writeProjectsCache(projects: Project[]): void {
+  const entry: ProjectsCacheEntry = { ts: Date.now(), projects };
+  memoryProjectsCache = entry;
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(entry));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+/**
+ * Invalide immédiatement le cache court des projets publics et notifie
+ * l'onglet courant ainsi que les autres onglets ouverts sur le site public.
+ */
+export function invalidatePublishedProjectsCache(): void {
+  memoryProjectsCache = null;
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.removeItem(SESSION_CACHE_KEY);
+    localStorage.setItem(PROJECTS_VERSION_STORAGE_KEY, String(Date.now()));
+  } catch {
+    // ignore
+  }
+  window.dispatchEvent(new CustomEvent(PROJECTS_UPDATED_EVENT));
+}
+
 export function getStaticPublishedProjects(): Project[] {
   return PUBLISHED_PROJECTS_SNAPSHOT.filter((p) => p.status === 'published').sort(
     (a, b) => a.sort_order - b.sort_order
   );
 }
 
-export async function fetchPublishedProjects(): Promise<{
+/**
+ * Fournit la liste initiale synchrone pour éviter tout clignotement :
+ * - Cache court frais (< 2 min) issu de Supabase si disponible
+ * - Sinon instantané statique (prérendu SEO) en attendant la réponse Supabase
+ */
+export function getInitialPublishedProjects(): Project[] {
+  return readFreshProjectsCache() ?? getStaticPublishedProjects();
+}
+
+/**
+ * Lit les projets publiés depuis Supabase EN PRIORITÉ (source de vérité unique).
+ * - Utilise un cache court (2 min) sauf si `force: true`.
+ * - Ne réinjecte JAMAIS les projets absents de Supabase (un projet dépublié ou supprimé disparaît immédiatement).
+ * - L'instantané statique ne sert QUE de repli si Supabase est non configuré, en pause ou injoignable.
+ */
+export async function fetchPublishedProjects(options?: { force?: boolean }): Promise<{
   projects: Project[];
-  source: 'supabase' | 'snapshot';
+  source: 'supabase' | 'cache' | 'snapshot';
 }> {
+  if (!options?.force) {
+    const cached = readFreshProjectsCache();
+    if (cached) {
+      return { projects: cached, source: 'cache' };
+    }
+  }
+
   const fallback = getStaticPublishedProjects();
   const client = getSupabaseClient();
   if (!client || !isSupabaseConfigured) {
     return { projects: fallback, source: 'snapshot' };
   }
 
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
+  const maxAttempts = 2;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10_000);
 
-    const { data, error } = await client
-      .from('projects')
-      .select('*')
-      .eq('status', 'published')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
-      .abortSignal(controller.signal);
+      const { data, error } = await client
+        .from('projects')
+        .select('*')
+        .eq('status', 'published')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false })
+        .abortSignal(controller.signal);
 
-    clearTimeout(timer);
+      clearTimeout(timer);
 
-    if (error || !data || data.length === 0) {
-      return { projects: fallback, source: 'snapshot' };
+      if (error || !Array.isArray(data)) {
+        if (attempt < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 600));
+          continue;
+        }
+        return { projects: readFreshProjectsCache() ?? fallback, source: 'snapshot' };
+      }
+
+      const remoteProjects = data.map((row) => normalizeRow(row as Record<string, unknown>));
+      const enriched = enrichRemoteProjectsWithLocalManifest(remoteProjects, fallback);
+      writeProjectsCache(enriched);
+      return { projects: enriched, source: 'supabase' };
+    } catch {
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, 600));
+        continue;
+      }
+      return { projects: readFreshProjectsCache() ?? fallback, source: 'snapshot' };
     }
-
-    const remoteProjects = data.map((row) => normalizeRow(row as Record<string, unknown>));
-
-    const snapshotBySlug = new Map(fallback.map((p) => [p.slug, p]));
-    const remoteSlugs = new Set(remoteProjects.map((p) => p.slug));
-    const enriched = remoteProjects.map((proj) => {
-      const local = snapshotBySlug.get(proj.slug);
-      if (!local) return proj;
-      return {
-        ...proj,
-        cover_asset_id: proj.cover_image_url.startsWith('http') ? null : local.cover_asset_id,
-        video_poster_asset_id:
-          proj.video_poster_url && proj.video_poster_url.startsWith('http')
-            ? null
-            : local.video_poster_asset_id,
-      };
-    });
-
-    // Inclure automatiquement les nouvelles publications statiques pas encore synchronisées dans Supabase
-    const missingFromRemote = fallback.filter((p) => !remoteSlugs.has(p.slug));
-    const merged = [...enriched, ...missingFromRemote].sort(
-      (a, b) => a.sort_order - b.sort_order
-    );
-
-    return { projects: merged, source: 'supabase' };
-  } catch {
-    return { projects: fallback, source: 'snapshot' };
   }
+
+  return { projects: readFreshProjectsCache() ?? fallback, source: 'snapshot' };
 }
 
 export async function submitContactMessage(
@@ -374,6 +454,7 @@ export async function saveProjectAdmin(
       .select('*')
       .single();
     if (error) throw error;
+    invalidatePublishedProjectsCache();
     return normalizeRow(data as Record<string, unknown>);
   } else {
     const { data, error } = await client
@@ -382,6 +463,7 @@ export async function saveProjectAdmin(
       .select('*')
       .single();
     if (error) throw error;
+    invalidatePublishedProjectsCache();
     return normalizeRow(data as Record<string, unknown>);
   }
 }
@@ -391,6 +473,7 @@ export async function deleteProjectAdmin(id: string): Promise<void> {
   if (!client) throw new Error('Supabase non configuré.');
   const { error } = await client.from('projects').delete().eq('id', id);
   if (error) throw error;
+  invalidatePublishedProjectsCache();
 }
 
 /**
@@ -422,6 +505,7 @@ export async function deleteAllDemoProjectsAdmin(): Promise<number> {
     // Non bloquant si dossier demo/ vide
   }
 
+  invalidatePublishedProjectsCache();
   return deletedRows?.length || 0;
 }
 
@@ -433,6 +517,7 @@ export async function updateProjectOrderAdmin(orderedIds: string[]): Promise<voi
       client.from('projects').update({ sort_order: index + 1 }).eq('id', id)
     )
   );
+  invalidatePublishedProjectsCache();
 }
 
 export async function uploadMediaAdmin(
@@ -454,10 +539,11 @@ export async function uploadMediaAdmin(
     .replace(/[^a-z0-9-_]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 48);
-  const path = `${folder}/${Date.now()}-${safeBase || 'media'}.${ext}`;
+  const stamp = Date.now();
+  const path = `${folder}/${stamp}-${safeBase || 'media'}.${ext}`;
 
   const { error } = await client.storage.from('portfolio-media').upload(path, file, {
-    cacheControl: '31536000',
+    cacheControl: '3600',
     upsert: false,
     contentType: file.type || undefined,
   });

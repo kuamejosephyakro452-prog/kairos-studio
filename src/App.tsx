@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -10,18 +10,19 @@ import {
 import { DICTIONARY } from '@/i18n/translations';
 import {
   fetchPublishedProjects,
-  getStaticPublishedProjects,
+  getInitialPublishedProjects,
+  PROJECTS_UPDATED_EVENT,
+  PROJECTS_VERSION_STORAGE_KEY,
 } from '@/lib/projectsRepository';
 import { SmoothScrollProvider } from '@/components/SmoothScrollProvider';
 import { CustomCursor } from '@/components/CustomCursor';
 import { Preloader } from '@/components/Preloader';
 import { FullscreenNav } from '@/components/FullscreenNav';
 import { Footer } from '@/components/Footer';
-import { PaletteSwitcher } from '@/components/PaletteSwitcher';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
 import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import type { FontPairId, Locale, PaletteId, Project } from '@/types/portfolio';
+import type { FontPairId, Locale, Project } from '@/types/portfolio';
 
 const ProjectDetailPage = lazy(() =>
   import('@/pages/ProjectDetailPage').then((m) => ({ default: m.ProjectDetailPage }))
@@ -34,22 +35,7 @@ const AdminPage = lazy(() =>
 );
 
 const LOCALE_KEY = 'kairos-locale';
-const PALETTE_KEY = 'kairos-palette';
-const VALID_PALETTES: PaletteId[] = ['braise', 'indigo', 'encre'];
 const VALID_FONTS: FontPairId[] = ['syne', 'bricolage', 'fraunces'];
-
-function detectInitialPalette(): PaletteId {
-  if (typeof window === 'undefined') return 'braise';
-  try {
-    const q = new URLSearchParams(window.location.search).get('palette') as PaletteId | null;
-    if (q && VALID_PALETTES.includes(q)) return q;
-    const saved = localStorage.getItem(PALETTE_KEY) as PaletteId | null;
-    if (saved && VALID_PALETTES.includes(saved)) return saved;
-  } catch {
-    // ignore
-  }
-  return 'braise';
-}
 
 function mapPathToLocale(pathname: string, target: Locale): string {
   if (pathname.startsWith('/fr/projets/')) {
@@ -69,10 +55,8 @@ function mapPathToLocale(pathname: string, target: Locale): string {
 
 const PublicLayout: React.FC<{
   locale: Locale;
-  palette: PaletteId;
-  onChangePalette: (next: PaletteId) => void;
   children: React.ReactNode;
-}> = ({ locale, palette, onChangePalette, children }) => {
+}> = ({ locale, children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -105,8 +89,6 @@ const PublicLayout: React.FC<{
         {children}
       </div>
       <Footer locale={locale} />
-      {/* Sélecteur temporaire de palette (?palette=braise|indigo|encre) — retirer cette ligne une fois la palette définitivement validée */}
-      <PaletteSwitcher locale={locale} palette={palette} onChange={onChangePalette} />
       <FloatingWhatsApp locale={locale} />
     </SmoothScrollProvider>
   );
@@ -132,23 +114,58 @@ const RootRedirect: React.FC = () => {
   return <Navigate to={`/${target}${search}`} replace />;
 };
 
-export const App: React.FC = () => {
-  const [projects, setProjects] = useState<Project[]>(() => getStaticPublishedProjects());
-  const [palette, setPalette] = useState<PaletteId>(() => detectInitialPalette());
+/**
+ * Pont de synchronisation live Supabase -> site public :
+ * - À chaque retour depuis /admin vers une page publique : force une lecture fraîche Supabase.
+ * - Sur événement local (même onglet) ou storage (autre onglet admin) : recharge immédiatement.
+ * - Au retour sur l'onglet (visibilitychange) : recharge si le cache court (2 min) a expiré.
+ */
+const ProjectsSyncBridge: React.FC<{
+  onSync: (force: boolean) => void;
+}> = ({ onSync }) => {
+  const location = useLocation();
+  const prevPathRef = useRef(location.pathname);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-palette', palette);
-    const metaTheme = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if (metaTheme) {
-      metaTheme.content =
-        palette === 'indigo' ? '#0A0E27' : palette === 'encre' ? '#F3EEE6' : '#07070B';
+    const prev = prevPathRef.current;
+    prevPathRef.current = location.pathname;
+    const leftAdmin = prev.startsWith('/admin') && !location.pathname.startsWith('/admin');
+    if (leftAdmin) {
+      onSync(true);
+    } else if (!location.pathname.startsWith('/admin')) {
+      onSync(false);
     }
-    try {
-      localStorage.setItem(PALETTE_KEY, palette);
-    } catch {
-      // ignore
-    }
-  }, [palette]);
+  }, [location.pathname, onSync]);
+
+  useEffect(() => {
+    const handleLocalUpdate = () => onSync(true);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === PROJECTS_VERSION_STORAGE_KEY) {
+        onSync(true);
+      }
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && !location.pathname.startsWith('/admin')) {
+        onSync(false);
+      }
+    };
+
+    window.addEventListener(PROJECTS_UPDATED_EVENT, handleLocalUpdate);
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener(PROJECTS_UPDATED_EVENT, handleLocalUpdate);
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [location.pathname, onSync]);
+
+  return null;
+};
+
+export const App: React.FC = () => {
+  const [projects, setProjects] = useState<Project[]>(() => getInitialPublishedProjects());
+  const [projectsHydrating, setProjectsHydrating] = useState(true);
 
   useEffect(() => {
     const qFont = new URLSearchParams(window.location.search).get('font') as FontPairId | null;
@@ -157,11 +174,12 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
+  const syncPublishedProjects = useCallback((force: boolean) => {
     let active = true;
-    fetchPublishedProjects().then(({ projects: live }) => {
-      if (active && live.length > 0) {
+    fetchPublishedProjects({ force }).then(({ projects: live }) => {
+      if (active) {
         setProjects(live);
+        setProjectsHydrating(false);
       }
     });
     return () => {
@@ -169,21 +187,16 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  const handleChangePalette = (next: PaletteId) => {
-    setPalette(next);
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set('palette', next);
-      window.history.replaceState(null, '', url.toString());
-    } catch {
-      // ignore
-    }
-  };
+  // Lecture prioritaire depuis Supabase à chaque visite (remplace le repli statique sans clignotement)
+  useEffect(() => {
+    return syncPublishedProjects(true);
+  }, [syncPublishedProjects]);
 
   const basename = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '') || '/';
 
   return (
     <BrowserRouter basename={basename === '/' ? undefined : basename}>
+      <ProjectsSyncBridge onSync={syncPublishedProjects} />
       <Suspense
         fallback={
           <div className="flex min-h-screen items-center justify-center bg-[var(--bg-primary)] font-mono-tech text-xs tracking-[0.26em] uppercase text-[var(--accent-text)]">
@@ -198,23 +211,27 @@ export const App: React.FC = () => {
           <Route
             path="/fr"
             element={
-              <PublicLayout locale="fr" palette={palette} onChangePalette={handleChangePalette}>
-                <HomePage locale="fr" palette={palette} projects={projects} />
+              <PublicLayout locale="fr">
+                <HomePage locale="fr" projects={projects} />
               </PublicLayout>
             }
           />
           <Route
             path="/fr/projets/:slug"
             element={
-              <PublicLayout locale="fr" palette={palette} onChangePalette={handleChangePalette}>
-                <ProjectDetailPage locale="fr" projects={projects} />
+              <PublicLayout locale="fr">
+                <ProjectDetailPage
+                  locale="fr"
+                  projects={projects}
+                  projectsLoading={projectsHydrating}
+                />
               </PublicLayout>
             }
           />
           <Route
             path="/fr/mentions-legales"
             element={
-              <PublicLayout locale="fr" palette={palette} onChangePalette={handleChangePalette}>
+              <PublicLayout locale="fr">
                 <LegalPage locale="fr" kind="legal" />
               </PublicLayout>
             }
@@ -222,7 +239,7 @@ export const App: React.FC = () => {
           <Route
             path="/fr/confidentialite"
             element={
-              <PublicLayout locale="fr" palette={palette} onChangePalette={handleChangePalette}>
+              <PublicLayout locale="fr">
                 <LegalPage locale="fr" kind="privacy" />
               </PublicLayout>
             }
@@ -232,23 +249,27 @@ export const App: React.FC = () => {
           <Route
             path="/en"
             element={
-              <PublicLayout locale="en" palette={palette} onChangePalette={handleChangePalette}>
-                <HomePage locale="en" palette={palette} projects={projects} />
+              <PublicLayout locale="en">
+                <HomePage locale="en" projects={projects} />
               </PublicLayout>
             }
           />
           <Route
             path="/en/projects/:slug"
             element={
-              <PublicLayout locale="en" palette={palette} onChangePalette={handleChangePalette}>
-                <ProjectDetailPage locale="en" projects={projects} />
+              <PublicLayout locale="en">
+                <ProjectDetailPage
+                  locale="en"
+                  projects={projects}
+                  projectsLoading={projectsHydrating}
+                />
               </PublicLayout>
             }
           />
           <Route
             path="/en/legal-notice"
             element={
-              <PublicLayout locale="en" palette={palette} onChangePalette={handleChangePalette}>
+              <PublicLayout locale="en">
                 <LegalPage locale="en" kind="legal" />
               </PublicLayout>
             }
@@ -256,7 +277,7 @@ export const App: React.FC = () => {
           <Route
             path="/en/privacy"
             element={
-              <PublicLayout locale="en" palette={palette} onChangePalette={handleChangePalette}>
+              <PublicLayout locale="en">
                 <LegalPage locale="en" kind="privacy" />
               </PublicLayout>
             }
@@ -269,7 +290,7 @@ export const App: React.FC = () => {
           <Route
             path="/en/*"
             element={
-              <PublicLayout locale="en" palette={palette} onChangePalette={handleChangePalette}>
+              <PublicLayout locale="en">
                 <NotFoundPage locale="en" />
               </PublicLayout>
             }
@@ -277,7 +298,7 @@ export const App: React.FC = () => {
           <Route
             path="*"
             element={
-              <PublicLayout locale="fr" palette={palette} onChangePalette={handleChangePalette}>
+              <PublicLayout locale="fr">
                 <NotFoundPage locale="fr" />
               </PublicLayout>
             }

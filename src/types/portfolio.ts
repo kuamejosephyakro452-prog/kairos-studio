@@ -1,7 +1,5 @@
 export type Locale = 'fr' | 'en';
 
-export type PaletteId = 'braise' | 'indigo' | 'encre';
-
 export type FontPairId = 'syne' | 'bricolage' | 'fraunces';
 
 export type ProjectCategory =

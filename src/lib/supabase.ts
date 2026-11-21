@@ -27,13 +27,19 @@ export function getAdminOAuthRedirectUrl(): string {
  * pour éviter les blocages infinis sur connexion mobile ou instable.
  */
 function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const urlStr = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const isRestRead =
+    urlStr.includes('/rest/v1/') &&
+    (!init?.method || init.method.toUpperCase() === 'GET' || init.method.toUpperCase() === 'HEAD');
+  const nextInit: RequestInit = isRestRead && !init?.cache ? { ...init, cache: 'no-store' } : { ...init };
+
   // Ne jamais remplacer un signal déjà fourni par l'appelant sans le relayer
-  if (init?.signal) {
-    return fetch(input, init);
+  if (nextInit.signal) {
+    return fetch(input, nextInit);
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SUPABASE_REQUEST_TIMEOUT_MS);
-  return fetch(input, { ...init, signal: controller.signal }).finally(() => {
+  return fetch(input, { ...nextInit, signal: controller.signal }).finally(() => {
     clearTimeout(timer);
   });
 }

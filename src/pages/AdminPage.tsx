@@ -639,7 +639,7 @@ export const AdminPage: React.FC = () => {
       setEditing(null);
       setFeedback({
         type: 'ok',
-        text: `Projet « ${saved.title_fr} » enregistré (${saved.status === 'published' ? 'Publié' : 'Brouillon'}).`,
+        text: `Enregistré — « ${saved.title_fr} » (${saved.status === 'published' ? 'Publié sur le site public' : 'Brouillon'}).`,
       });
     } catch (err) {
       setFeedback({
@@ -662,8 +662,8 @@ export const AdminPage: React.FC = () => {
         type: 'ok',
         text:
           nextStatus === 'published'
-            ? `« ${proj.title_fr} » est maintenant publié sur le portfolio.`
-            : `« ${proj.title_fr} » a été repassé en brouillon.`,
+            ? `Enregistré — « ${proj.title_fr} » est maintenant publié sur le site public.`
+            : `Enregistré — « ${proj.title_fr} » a été repassé en brouillon.`,
       });
     } catch (err) {
       setFeedback({ type: 'err', text: err instanceof Error ? err.message : 'Erreur.' });
@@ -695,7 +695,7 @@ export const AdminPage: React.FC = () => {
     setProjects(reordered);
     try {
       await updateProjectOrderAdmin(reordered.map((p) => p.id));
-      setFeedback({ type: 'ok', text: 'Ordre des projets mis à jour.' });
+      setFeedback({ type: 'ok', text: 'Enregistré — Ordre des projets mis à jour sur le site public.' });
     } catch (err) {
       setFeedback({ type: 'err', text: err instanceof Error ? err.message : 'Erreur réorganisation.' });
       await loadAdminData();

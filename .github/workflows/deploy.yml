@@ -38,9 +38,10 @@ jobs:
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://kuamejosephyakro452-prog.github.io/kairos-studio' }}
         run: npm run build
 
-      - name: Verify admin auth resilience & build integrity
+      - name: Verify admin auth resilience, sync & build integrity
         run: |
           npm run test:admin-auth
+          npm run test:admin-sync
           npm run test:smoke
 
       - name: Upload Pages artifact

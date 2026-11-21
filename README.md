@@ -10,11 +10,11 @@
 - **Front-end** : React 19 + TypeScript + Vite 6 + Tailwind CSS v4
 - **Routage bilingue** : `/fr` (par défaut, `/` redirige vers `/fr`), `/en`, `/fr/projets/:slug`, `/en/projects/:slug`, `/fr/mentions-legales`, `/en/legal-notice`, `/fr/confidentialite`, `/en/privacy`, `/admin` (privé, `noindex`).
 - **Direction visuelle — « Du Signal Brut à l’Expérience Vivante »** (`CONCEPT.md`) :
-  - **3 palettes chromatiques en tokens CSS** (`src/styles/index.css`) : **Braise** (par défaut), **Indigo & Corail** et **Encre & Vermillon**, testables à tout moment via `?palette=braise|indigo|encre` ou le sélecteur discret en bas à gauche.
+  - **Palette unique « Encre & Vermillon » en tokens CSS centralisés** (`src/styles/index.css`) : papier chaud `#F3EEE6`, encre `#0F0F12`, vermillon `#E8392B`, vert-bleu profond `#0F4C4A`.
   - **Typographies variables auto-hébergées** (`@fontsource-variable`) : **Syne** (Display), **Space Grotesk** (Corps & UI), **Fraunces** (accents italiques) et **JetBrains Mono** (index & coordonnées) — aucune requête Google Fonts externe.
 - **Animations & interactions** :
   - Préchargeur vectoriel traçant le monogramme **JK** avec compteur `000→100` (une fois par session, désactivé si `prefers-reduced-motion`).
-  - Hero plein écran : shader **WebGL GLSL** liquide réactif au curseur et à la palette active (chargé en différé via `requestIdleCallback`, repli mesh CSS sur mobile), monogramme **JK** 3D interactif et showreel vidéo muet.
+  - Hero plein écran : shader **WebGL GLSL** liquide réactif au curseur (chargé en différé via `requestIdleCallback`, repli mesh CSS sur mobile), monogramme **JK** 3D interactif et showreel vidéo muet.
   - Smooth scroll **Lenis** synchronisé avec **GSAP + ScrollTrigger** (desktop uniquement).
   - Scène des 5 disciplines à changement d’ambiance chromatique en direct.
   - **3 modes d’exploration des réalisations** : **Galerie** (défilement horizontal épinglé sur desktop / grille fluide sur mobile), **Index** (liste avec prévisualisation flottante suivant le curseur) et **Explorer** (canevas libre glissable au pointeur/doigt).
@@ -28,23 +28,7 @@
 
 ---
 
-## 2. Comparer les 3 palettes & retirer le sélecteur temporaire
-
-### Comparer en ligne
-- Par l’interface : cliquez sur **Braise / Indigo / Encre** dans la pilule discrète en bas à gauche (le choix est mémorisé dans `localStorage`).
-- Par URL partageable :
-  - `?palette=braise` (défaut)
-  - `?palette=indigo`
-  - `?palette=encre`
-
-### Retirer le sélecteur une fois votre palette définitive choisie
-1. Dans `src/App.tsx`, supprimez l’import `PaletteSwitcher` et la ligne `<PaletteSwitcher palette={palette} locale={locale} onChange={setPalette} />`.
-2. Si vous souhaitez changer la palette par défaut (`braise` → `indigo` ou `encre`), modifiez la valeur par défaut dans `src/App.tsx` (état `palette`) et `data-palette="braise"` dans `index.html`.
-3. Vous pouvez ensuite supprimer `src/components/PaletteSwitcher.tsx` et relancer `npm run build`.
-
----
-
-## 3. Espace d'Administration (`/admin`) & Connexion GitHub OAuth
+## 2. Espace d'Administration (`/admin`) & Connexion GitHub OAuth
 
 1. **Connexion principale par GitHub (OAuth 2.0 PKCE)** : ouvrez `/admin` et cliquez sur **« Se connecter avec GitHub »**. L'authentification passe par Supabase Auth (`flowType: 'pkce'`). Une connexion de secours par e-mail et mot de passe reste disponible dans un panneau repliable, verrouillée sur ce même compte unique.
 2. **Configuration GitHub OAuth + Supabase Dashboard** *(aucun secret dans le dépôt)* :

@@ -13,8 +13,8 @@ Suivi complet du projet **KAIROS STUDIO** (Phase 1 Infrastructure + Phase 2 Refo
 - [x] **Catalogue élargi & médias de démonstration** :
   - 5 nouvelles réalisations sélectionnées & recadrées depuis `D:\MON STUDIO\04_TEMPLATES` (`origine_non_verifiee = true`), converties en AVIF/WebP responsives.
   - 3 vidéos libres de droits Pexels compressées MP4/WebM 720p dans `public/media/demo/` (`demo = true`), documentées dans `DEMO_ASSETS.md`.
-- [x] **Design system chromatique (3 palettes) & typographies auto-hébergées** :
-  - 3 palettes tokens CSS (`Braise` par défaut, `Indigo & Corail`, `Encre & Vermillon`) + sélecteur temporaire discret (`?palette=braise|indigo|encre`).
+- [x] **Design system chromatique (« Encre & Vermillon ») & typographies auto-hébergées** :
+  - Palette unique **« Encre & Vermillon »** centralisée en tokens CSS (`src/styles/index.css`).
   - Polices variables auto-hébergées (`Syne`, `Space Grotesk`, `Fraunces`, `JetBrains Mono`) — zéro dépendance Google Fonts.
 - [x] **Expérience interactive complète** :
   - Préchargeur monogramme **JK** + compteur `000→100`.
@@ -24,8 +24,9 @@ Suivi complet du projet **KAIROS STUDIO** (Phase 1 Infrastructure + Phase 2 Refo
   - Fiches projets structurées plein écran + bloc « Projet suivant », Footer au wordmark géant réactif lettre par lettre, 404 personnalisée, WhatsApp flottant toujours accessible.
 - [x] **Administration enrichie (`/admin`)** : filtres *Origine non vérifiée* et *Démo*, badges dédiés, cases à cocher dans l’éditeur, bouton **« Supprimer tout le contenu de démonstration »** en 1 clic.
 - [x] **Migration & synchronisation Supabase Phase 2** : colonnes `origine_non_verifiee` & `demo` + 11 projets publiés (5 catégories) + 2 brouillons synchronisés en direct sur `lpenmdantrekfhyehbyp`.
-- [x] **Cycles visuels 1, 2, 3 & 4** : comparaisons palettes/polices, captures `docs/avant-apres/avant_*.png` & `apres_*.png`, audit interactif complet et correctifs validés (galerie horizontale sticky sans `pin:true`, suppression du `transform` persistant sur `.page-transition`, bascule instantanée des 3 palettes, mobile 390 px sans débordement).
+- [x] **Cycles visuels 1, 2, 3 & 4** : audits visuels, captures `docs/avant-apres/avant_*.png` & `apres_*.png`, audit interactif complet et correctifs validés (galerie horizontale sticky sans `pin:true`, suppression du `transform` persistant sur `.page-transition`, mobile 390 px sans débordement).
 - [x] **Déploiement production Phase 2** : rebuild final, tests statiques (`test:smoke`), push sur GitHub (`main`), déploiement GitHub Pages et vérifications réelles en ligne.
 
 ## Journal chronologique
-- **2026-11-20** : Livraison Phase 1 (infrastructure, Supabase, déploiement initial), suivie de la refonte intégrale Phase 2 (audit, concept, médias, design system 3 palettes, interactions avancées, migration Supabase Phase 2, cycles QA 1–3).
+- **2026-11-20** : Livraison Phase 1 (infrastructure, Supabase, déploiement initial), suivie de la refonte intégrale Phase 2 (audit, concept, médias, design system, interactions avancées, migration Supabase Phase 2, cycles QA 1–3).
+- **2026-11-21** : Verrouillage de la palette unique **« Encre & Vermillon »** (retrait complet du sélecteur), sécurisation GitHub OAuth PKCE et synchronisation temps réel Admin → Site public via Supabase en priorité.

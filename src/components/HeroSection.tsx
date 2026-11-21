@@ -3,17 +3,16 @@ import gsap from 'gsap';
 import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
 import { resolveAssetUrl } from '@/lib/media';
-import type { Locale, PaletteId } from '@/types/portfolio';
+import type { Locale } from '@/types/portfolio';
 import { FluidWebGLHero } from './FluidWebGLHero';
 import { InteractiveMonogramJK } from './InteractiveMonogramJK';
 import { Magnetic } from './Magnetic';
 
 interface HeroSectionProps {
   locale: Locale;
-  palette: PaletteId;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ locale, palette }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
   const t = DICTIONARY[locale];
   const heroRef = useRef<HTMLElement>(null);
 
@@ -69,18 +68,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale, palette }) => 
 
       {/* Shader WebGL fluide GLSL chargé en différé (desktop) */}
       <div className="pointer-events-none absolute inset-0 opacity-90">
-        <FluidWebGLHero palette={palette} />
+        <FluidWebGLHero />
       </div>
 
-      {/* Voile d'équilibre pour garantir un contraste AA constant sur les 3 palettes */}
+      {/* Voile d'équilibre pour garantir un contraste AA constant */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            palette === 'encre'
-              ? 'linear-gradient(180deg, rgba(243,238,230,0.45) 0%, rgba(243,238,230,0.22) 55%, rgba(243,238,230,0.92) 100%)'
-              : 'linear-gradient(180deg, rgba(7,7,11,0.52) 0%, rgba(7,7,11,0.28) 52%, var(--bg-primary) 100%)',
+            'linear-gradient(180deg, rgba(243,238,230,0.45) 0%, rgba(243,238,230,0.22) 55%, rgba(243,238,230,0.92) 100%)',
         }}
       />
 

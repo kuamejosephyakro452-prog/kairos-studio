@@ -2,71 +2,10 @@
 
 @layer base {
   /* =========================================================================
-   * PALETTE B — « BRAISE » (Défaut : intensité, profondeur & modernité)
+   * PALETTE UNIQUE — « ENCRE & VERMILLON » (Tokens CSS centralisés)
    * Contraste vérifié WCAG AA+
    * ========================================================================= */
-  :root,
-  html[data-palette="braise"] {
-    --bg-primary: #07070B;
-    --bg-elevated: #0E0E15;
-    --bg-card: #13131D;
-    --bg-invert: #F6F1EA;
-    --text-primary: #F6F1EA;
-    --text-muted: #B8B1A8;
-    --text-invert: #07070B;
-    --accent-1: #FF6B00;
-    --accent-2: #E6007E;
-    --accent-3: #5B2EFF;
-    --accent-text: #FF8C3A;
-    --accent-on-solid: #FFFFFF;
-    --border-subtle: rgba(246, 241, 234, 0.13);
-    --border-strong: rgba(255, 107, 0, 0.45);
-    --glow-primary: rgba(255, 107, 0, 0.28);
-    --glow-secondary: rgba(230, 0, 126, 0.24);
-    --glow-tertiary: rgba(91, 46, 255, 0.26);
-    --grad-signature: linear-gradient(120deg, #E25200 0%, #D40072 52%, #5226F0 100%);
-    --grad-text: linear-gradient(115deg, #FF8F3D 0%, #FF3B9A 55%, #8F6BFF 100%);
-    --grad-mesh: radial-gradient(62% 55% at 18% 22%, rgba(255, 107, 0, 0.24) 0%, transparent 64%),
-      radial-gradient(56% 52% at 84% 26%, rgba(230, 0, 126, 0.22) 0%, transparent 62%),
-      radial-gradient(60% 58% at 62% 85%, rgba(91, 46, 255, 0.25) 0%, transparent 65%);
-    --shadow-elevated: 0 28px 90px rgba(0, 0, 0, 0.65);
-    --is-light-palette: 0;
-  }
-
-  /* =========================================================================
-   * PALETTE A — « INDIGO & CORAIL » (Énergie, élan & tension chromatique)
-   * ========================================================================= */
-  html[data-palette="indigo"] {
-    --bg-primary: #0A0E27;
-    --bg-elevated: #11163A;
-    --bg-card: #161D4A;
-    --bg-invert: #FFF3E4;
-    --text-primary: #FFF3E4;
-    --text-muted: #C4BED4;
-    --text-invert: #0A0E27;
-    --accent-1: #FF5A3C;
-    --accent-2: #FFB347;
-    --accent-3: #3347FF;
-    --accent-text: #FF8368;
-    --accent-on-solid: #FFFFFF;
-    --border-subtle: rgba(255, 243, 228, 0.14);
-    --border-strong: rgba(255, 90, 60, 0.48);
-    --glow-primary: rgba(255, 90, 60, 0.3);
-    --glow-secondary: rgba(255, 179, 71, 0.24);
-    --glow-tertiary: rgba(51, 71, 255, 0.34);
-    --grad-signature: linear-gradient(120deg, #D94126 0%, #C76214 48%, #283BF0 100%);
-    --grad-text: linear-gradient(115deg, #FF7B61 0%, #FFC26B 55%, #6F80FF 100%);
-    --grad-mesh: radial-gradient(60% 55% at 20% 25%, rgba(255, 90, 60, 0.25) 0%, transparent 65%),
-      radial-gradient(58% 54% at 82% 20%, rgba(51, 71, 255, 0.34) 0%, transparent 64%),
-      radial-gradient(55% 55% at 65% 84%, rgba(255, 179, 71, 0.2) 0%, transparent 65%);
-    --shadow-elevated: 0 28px 90px rgba(4, 6, 22, 0.72);
-    --is-light-palette: 0;
-  }
-
-  /* =========================================================================
-   * PALETTE C — « ENCRE & VERMILLON » (Confiance, audace graphique éditoriale)
-   * ========================================================================= */
-  html[data-palette="encre"] {
+  :root {
     --bg-primary: #F3EEE6;
     --bg-elevated: #E8E0D4;
     --bg-card: #FAF6F0;
@@ -90,7 +29,6 @@
       radial-gradient(58% 52% at 84% 24%, rgba(15, 76, 74, 0.16) 0%, transparent 64%),
       radial-gradient(55% 55% at 50% 85%, rgba(232, 57, 43, 0.08) 0%, transparent 65%);
     --shadow-elevated: 0 24px 70px rgba(15, 15, 18, 0.14);
-    --is-light-palette: 1;
   }
 
   /* =========================================================================
@@ -181,7 +119,7 @@
   opacity: 0.55;
 }
 
-/* Surface verre adaptée aux 3 palettes */
+/* Surface verre */
 .glass-panel {
   background: color-mix(in srgb, var(--bg-card) 78%, transparent);
   border: 1px solid var(--border-subtle);

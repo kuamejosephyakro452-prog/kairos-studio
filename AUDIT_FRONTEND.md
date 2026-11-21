@@ -39,7 +39,7 @@ Audit critique réalisé sur la version en ligne (`https://kuamejosephyakro452-p
 ## 3. Objectifs mesurables de la Phase 2 (Refonte totale)
 1. **Zéro référence** à la signification du nom « Kairos ».
 2. **Concept directeur fort** issu du métier : transformer une idée brute en expérience visuelle, audiovisuelle et interactive (*Turning Ideas Into Experiences.*).
-3. **Palette vibrante testée et comparée en réel** (`Indigo & Corail` vs `Braise` vs `Encre & Vermillon`), avec sélecteur temporaire (`?palette=...`) pour permettre la comparaison directe en ligne.
+3. **Palette éditoriale affirmée (« Encre & Vermillon »)** centralisée en tokens CSS dans `src/styles/index.css`.
 4. **Polices auto-hébergées** de fort caractère, comparées en 3 duos avant sélection.
 5. **Chorégraphie GSAP + ScrollTrigger + Lenis + WebGL/Shader GLSL** fluide à 60 fps, 100 % accessible (`prefers-reduced-motion`, AA) et orientée tactile sur mobile.
 6. **Galerie enrichie** (créations vérifiées + meilleures pièces `origine_non_verifiee` recadrées avec soin + 3 vidéos démo libres `demo = true` avec suppression en 1 clic dans `/admin`), vue *Pinned Horizontal* + vue libre *Explorer*.

@@ -52,17 +52,11 @@ Cette idée directrice structure l'intégralité du design, du vocabulaire et du
 
 ---
 
-## 4. Protocole d'expérimentation (Couleurs & Typographies)
+## 4. Direction Chromatique & Typographies
 
-### 3 Directions chromatiques à tester en réel sur la page d'accueil
-Toutes construites en tokens CSS (`--bg-primary`, `--bg-elevated`, `--text-primary`, `--text-muted`, `--accent-1`, `--accent-2`, `--accent-3`, `--glow`, `--mesh-1..3`, `--border`) et commutables via `?palette=braise|indigo|encre` + un commutateur discret :
-- **`braise`** : Presque-noir `#07070B` + dégradé incandescent `#FF6B00` → `#E6007E` → `#5B2EFF` + texte ivoire `#F6F1EA`.
-- **`indigo`** : Nuit indigo profond `#0A0E27` + corail vif `#FF5A3C` + ambre `#FFB347` + ultramarine électrique `#3347FF` + texte crème `#FFF3E4`.
-- **`encre`** : Papier chaud `#F3EEE6` + encre `#0F0F12` + vermillon éclatant `#E8392B` + vert-bleu profond `#0F4C4A`.
+### Palette retenue : « Encre & Vermillon »
+Construite intégralement en tokens CSS centralisés (`--bg-primary`, `--bg-elevated`, `--bg-card`, `--text-primary`, `--text-muted`, `--accent-1`, `--accent-2`, `--accent-3`, `--grad-signature`, `--grad-text`, `--grad-mesh`, `--border-subtle`) :
+- **« Encre & Vermillon »** : Papier chaud `#F3EEE6` + encre `#0F0F12` + vermillon éclatant `#E8392B` + vert-bleu profond `#0F4C4A`.
 
-### 3 Duos typographiques auto-hébergés à tester
-1. **Duo 1 — `Syne Variable` (display avant-gardiste à variations expressives) + `Space Grotesk` (corps technique fluide) + `JetBrains Mono` (repères/timecodes)**
-2. **Duo 2 — `Bricolage Grotesque Variable` (grotesque singulière expressive) + `Plus Jakarta Sans` + `JetBrains Mono`**
-3. **Duo 3 — `Fraunces Variable` (serif éditorial à fort contraste optique) + `Space Grotesk` + `JetBrains Mono`**
-
-Chaque palette et chaque duo sera comparé visuellement puis tranché et justifié dans `DECISIONS.md`.
+### Duos typographiques auto-hébergés
+1. **Duo retenu — `Syne Variable` (display avant-gardiste à variations expressives) + `Space Grotesk` (corps technique fluide) + `Fraunces` (accents italiques) + `JetBrains Mono` (repères/timecodes)**

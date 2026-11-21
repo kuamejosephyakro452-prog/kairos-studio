@@ -534,7 +534,7 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         {
           heading: '3. Préférences locales',
           paragraphs: [
-            'Votre choix de langue (FR/EN) et de palette visuelle est enregistré localement dans votre navigateur (localStorage).',
+            'Votre choix de langue (FR/EN) est enregistré localement dans votre navigateur (localStorage).',
           ],
         },
         {
@@ -891,7 +891,7 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         {
           heading: '3. Local Preferences',
           paragraphs: [
-            'Your language (FR/EN) and palette preference are stored locally in your browser (localStorage).',
+            'Your language preference (FR/EN) is stored locally in your browser (localStorage).',
           ],
         },
         {

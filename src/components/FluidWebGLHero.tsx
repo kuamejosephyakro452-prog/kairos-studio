@@ -1,55 +1,29 @@
 import React, { useEffect, useRef } from 'react';
-import type { PaletteId } from '@/types/portfolio';
 
 interface FluidWebGLHeroProps {
-  palette: PaletteId;
   className?: string;
 }
 
-const PALETTE_SHADER_COLORS: Record<
-  PaletteId,
-  {
-    bg: [number, number, number];
-    c1: [number, number, number];
-    c2: [number, number, number];
-    c3: [number, number, number];
-    intensity: number;
-  }
-> = {
-  braise: {
-    bg: [0.027, 0.027, 0.043],
-    c1: [1.0, 0.42, 0.0], // #FF6B00
-    c2: [0.902, 0.0, 0.494], // #E6007E
-    c3: [0.357, 0.18, 1.0], // #5B2EFF
-    intensity: 0.78,
-  },
-  indigo: {
-    bg: [0.039, 0.055, 0.153], // #0A0E27
-    c1: [1.0, 0.353, 0.235], // #FF5A3C
-    c2: [1.0, 0.702, 0.278], // #FFB347
-    c3: [0.2, 0.278, 1.0], // #3347FF
-    intensity: 0.76,
-  },
-  encre: {
-    bg: [0.953, 0.933, 0.902], // #F3EEE6
-    c1: [0.91, 0.224, 0.169], // #E8392B
-    c2: [0.059, 0.298, 0.29], // #0F4C4A
-    c3: [0.85, 0.78, 0.7], // Papier chaud accentué
-    intensity: 0.34,
-  },
+const SHADER_COLORS: {
+  bg: [number, number, number];
+  c1: [number, number, number];
+  c2: [number, number, number];
+  c3: [number, number, number];
+  intensity: number;
+} = {
+  bg: [0.953, 0.933, 0.902], // #F3EEE6
+  c1: [0.91, 0.224, 0.169], // #E8392B
+  c2: [0.059, 0.298, 0.29], // #0F4C4A
+  c3: [0.85, 0.78, 0.7], // Papier chaud accentué
+  intensity: 0.34,
 };
 
 /**
  * Shader WebGL GLSL fluide multi-couches (distorsion liquide réactive au curseur).
  * Chargé en différé (requestIdleCallback) pour préserver le LCP mobile ; repli CSS mesh gradient sur appareils modestes.
  */
-export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ palette, className = '' }) => {
+export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ className = '' }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const paletteRef = useRef<PaletteId>(palette);
-
-  useEffect(() => {
-    paletteRef.current = palette;
-  }, [palette]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -214,7 +188,7 @@ export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ palette, classNa
         mouse.x += (mouse.tx - mouse.x) * 0.055;
         mouse.y += (mouse.ty - mouse.y) * 0.055;
 
-        const cfg = PALETTE_SHADER_COLORS[paletteRef.current];
+        const cfg = SHADER_COLORS;
         gl.uniform2f(uRes, canvas.width, canvas.height);
         gl.uniform1f(uTime, (now - start) * 0.001);
         gl.uniform2f(uMouse, mouse.x, mouse.y);

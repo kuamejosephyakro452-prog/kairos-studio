@@ -14,17 +14,12 @@ Journal des décisions créatives, typographiques, chromatiques, techniques et �
 
 ---
 
-## 2. Direction Chromatique — Comparaison des 3 Palettes & Choix Final
-Les trois directions imposées ont été implémentées en **tokens CSS complets** (`src/styles/index.css` : `--bg-primary`, `--bg-elevated`, `--bg-card`, `--text-primary`, `--text-muted`, `--accent-1`, `--accent-2`, `--accent-3`, `--accent-gradient`, `--accent-text`, `--accent-on-solid`, `--glow-primary`, `--border-subtle`) et capturées sur la vraie page d’accueil (Cycle 1) :
+## 2. Direction Chromatique — Palette Unique « Encre & Vermillon »
+La palette définitive **« Encre & Vermillon »** est implémentée en **tokens CSS centralisés** (`src/styles/index.css` : `--bg-primary`, `--bg-elevated`, `--bg-card`, `--text-primary`, `--text-muted`, `--accent-1`, `--accent-2`, `--accent-3`, `--grad-signature`, `--accent-text`, `--accent-on-solid`, `--glow-primary`, `--border-subtle`) :
 
-| Palette | Tokens clés | Émotion & Constat sur capture réelle | Verdict |
-| :--- | :--- | :--- | :--- |
-| **B. « Braise »** *(retenue par défaut)* | Fond `#07070B`, gradient `#FF6B00 → #E6007E → #5B2EFF`, texte ivoire `#F6F1EA` | Contraste immédiat, profondeur cinéma qui sublime aussi bien les visuels sombres (Nexora, Brand Guidelines) que les pièces colorées (Natur, Digital Creativity, Louange). Lueur WebGL liquide ultra-vivante sans écraser la lisibilité. | **Retenue par défaut** |
-| **A. « Indigo & Corail »** | Fond `#0A0E27`, corail `#FF5A3C`, ambre `#FFB347`, ultramarine `#3347FF`, texte `#FFF3E4` | Très énergétique et lumineuse, excellente lueur chaude, mais le fond bleu nuit teinte légèrement les créations à dominantes émeraude/vert-lime (Louange, Solution). | Conservée via sélecteur (`?palette=indigo`) |
-| **C. « Encre & Vermillon »** | Papier chaud `#F3EEE6`, encre `#0F0F12`, vermillon `#E8392B`, vert-bleu `#0F4C4A` | Très forte autorité éditoriale en plein jour et lisibilité exemplaire ; moins spectaculaire sur le Hero WebGL + vidéo sombre que *Braise*. | Conservée via sélecteur (`?palette=encre`) |
-
-- **Accessibilité (AA minimum)** : Lors du Cycle 1, le contraste du texte sur les boutons dégradés a été renforcé en forçant `--accent-on-solid: #FFFFFF` sur l’ensemble du gradient, et le contraste des boutons inactifs du sélecteur de palette a été relevé au Cycle 3 (`opacity 80%`).
-- **Sélecteur temporaire de palettes** : Conservé discrètement en bas à gauche (`PaletteSwitcher.tsx`) + activable par URL (`?palette=braise`, `?palette=indigo`, `?palette=encre`) afin que Joseph puisse comparer librement en ligne. Instructions de retrait en 2 lignes documentées dans `README.md`.
+- **« Encre & Vermillon »** : Papier chaud `#F3EEE6`, carte `#FAF6F0`, encre `#0F0F12`, vermillon `#E8392B`, vert-bleu profond `#0F4C4A`.
+- **Accessibilité (AA minimum)** : Contraste vérifié sur l'ensemble des textes, boutons dégradés (`--accent-on-solid: #FAF6F0`) et surfaces verre.
+- **Unicité visuelle** : Aucune commutation de couleur n'est exposée au visiteur.
 
 ---
 
@@ -53,21 +48,21 @@ Zéro appel Google Fonts externe (confidentialité + performance LCP). Trois dir
 
 ## 5. Boucles de Qualité Visuelle (3 Cycles Complets)
 - **Audit initial (`AUDIT_FRONTEND.md`)** : captures de la V1 conservées dans `docs/avant-apres/avant_*.png`.
-- **Cycle 1 (Palettes + Polices + Hero)** :
-  - Corrigé le chevauchement potentiel entre la barre basse du Hero et les pilules flottantes (`pb-20 sm:pb-24` + repère de scroll centré).
-  - Renforcé le contraste texte sur dégradé CTA (`--accent-on-solid: #FFFFFF`).
+- **Cycle 1 (Couleurs + Polices + Hero)** :
+  - Corrigé le chevauchement potentiel entre la barre basse du Hero et le bouton WhatsApp flottant (`pb-20 sm:pb-24` + repère de scroll centré).
+  - Renforcé le contraste texte sur dégradé CTA.
   - Purgé les packages de polices non retenues (`bricolage-grotesque`, `plus-jakarta-sans`) pour alléger le bundle.
 - **Cycle 2 (QA Interactif complet Desktop 1440px & Mobile 390px)** :
   - Identifié 4 défauts majeurs et 5 ajustements : synchronisation Supabase (3 → 11 projets), comportement `ScrollTrigger` pinned horizontal lors du chargement asynchrone, dégagement de la barre latérale sticky sur la fiche projet, coupure de mot du wordmark géant en pied de page sur mobile (`KAIROS S / TUDIO`), chevauchement des glyphes `404` avec le H1, et traduction des `aria-label` en anglais.
 - **Cycle 3 & 4 (Correctifs de fond, Sync Live Supabase & Re-vérification complète)** :
   - Migration Phase 2 (`origine_non_verifiee`, `demo`, policy Storage `demo/%`) + upsert des 13 projets appliqués en direct sur Supabase `lpenmdantrekfhyehbyp` (vérification `anon` : 11 publiés sur 5 catégories, 0 brouillon).
   - **Fix racine `.page-transition`** (`src/styles/index.css`) : retrait du `transform: translateY(0)` maintenu par `animation-fill-mode: both`, qui créait un bloc englobant perturbant `position: fixed` et `position: sticky`.
-  - **`WorksShowcase.tsx` (Galerie horizontale)** : passage à une architecture **CSS `position: sticky` + GSAP ScrollTrigger `scrub`** (sans `pin: true` / `.pin-spacer`), garantissant 0 disparition DOM sous React 19 et un défilement horizontal fluide sur les 11 créations.
-  - **`FullscreenNav.tsx` & `PaletteSwitcher.tsx`** : retrait des `transition-all` / `color-mix` lents lors du basculement de palette ; pilule active en dégradé signature (`bg-accent-gradient`) à contraste garanti sur *Braise*, *Indigo* et *Encre* (en-tête clair lisible en mode *Encre*).
+  - **`WorksShowcase.tsx` (Galerie horizontale)** : passage à une architecture **CSS `position: sticky` + GSAP ScrollTrigger `scrub`** (sans `pin: true` / `.pin-spacer`), garantissant 0 disparition DOM sous React 19 et un défilement horizontal fluide sur les créations.
+  - **`FullscreenNav.tsx`** : en-tête lisible et pilule active en dégradé signature (`bg-accent-gradient`) à contraste garanti.
   - `ProjectDetailPage.tsx` : `lg:sticky lg:top-32` sous la navigation fixe.
   - `Footer.tsx` : groupement par mot (`inline-flex whitespace-nowrap`) empêchant toute coupure interne de `KAIROS` ou `STUDIO` sur mobile.
   - `NotFoundPage.tsx` : `404` en `font-mono-tech text-accent-gradient` + marge `mt-3`.
-  - `PaletteSwitcher.tsx` & `WorksShowcase.tsx` : `aria-label` et `title` 100 % traduits FR/EN.
+  - `WorksShowcase.tsx` : `aria-label` et `title` 100 % traduits FR/EN.
   - `ServicesStage.tsx` : support `onFocus` clavier aligné avec le survol/clic.
 
 ---
