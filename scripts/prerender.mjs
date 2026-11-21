@@ -57,7 +57,9 @@ function buildHtml(template, route) {
   html = html.replace(/href="\.\/favicon\.svg"/g, `href="${BASE_PATH}favicon.svg"`);
 
   const canonicalUrl = `${SITE_URL}${route.path}`;
-  const ogImage = route.ogImage || `${SITE_URL}/media/images/pub-nexora-poster-1600w.webp`;
+  const defaultOgImage = `${SITE_URL}/media/images/og-preview-kairos.jpg`;
+  const ogImage = route.ogImage || defaultOgImage;
+  const isDefaultOg = ogImage === defaultOgImage;
 
   const headInject = [
     `<meta name="robots" content="${route.noindex ? 'noindex, nofollow' : 'index, follow'}" />`,
@@ -71,6 +73,11 @@ function buildHtml(template, route) {
     `<meta property="og:description" content="${escapeHtml(route.description)}" />`,
     `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`,
     `<meta property="og:image" content="${escapeHtml(ogImage)}" />`,
+    `<meta property="og:image:secure_url" content="${escapeHtml(ogImage)}" />`,
+    isDefaultOg ? `<meta property="og:image:type" content="image/jpeg" />` : '',
+    isDefaultOg ? `<meta property="og:image:width" content="1200" />` : '',
+    isDefaultOg ? `<meta property="og:image:height" content="630" />` : '',
+    `<meta property="og:image:alt" content="KAIROS STUDIO — Turning Ideas Into Experiences" />`,
     `<meta property="og:locale" content="${route.lang === 'fr' ? 'fr_FR' : 'en_US'}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(route.title)}" />`,

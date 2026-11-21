@@ -48,7 +48,7 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
   canonicalPath,
   alternateFrPath,
   alternateEnPath,
-  ogImage = `${SITE_URL}/media/images/pub-nexora-poster-1600w.webp`,
+  ogImage = `${SITE_URL}/media/images/og-preview-kairos.jpg`,
   noindex = false,
   jsonLd,
 }) => {
@@ -76,6 +76,8 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
     upsertMeta('property', 'og:description', description);
     upsertMeta('property', 'og:url', canonicalUrl);
     upsertMeta('property', 'og:image', ogImage);
+    upsertMeta('property', 'og:image:secure_url', ogImage);
+    upsertMeta('property', 'og:image:alt', 'KAIROS STUDIO — Turning Ideas Into Experiences');
     upsertMeta('property', 'og:locale', locale === 'fr' ? 'fr_FR' : 'en_US');
     upsertMeta('name', 'twitter:card', 'summary_large_image');
     upsertMeta('name', 'twitter:title', title);
