@@ -13,9 +13,8 @@ interface ServicesStageProps {
 
 /**
  * Scène 3 — Index interactif plein écran des 5 domaines.
- * Les visuels affichés dans chaque scène proviennent EXCLUSIVEMENT des créations publiées
- * dans l'espace d'administration (Supabase), afin qu'aucune création supprimée ou dépubliée
- * ne puisse jamais apparaître.
+ * Les visuels affichés dans chaque scène proviennent exclusivement des créations publiées
+ * dans le catalogue statique du studio.
  */
 export const ServicesStage: React.FC<ServicesStageProps> = ({
   locale,
@@ -39,7 +38,7 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({
       if (matching.length > 0) {
         map.set(srv.id, matching);
       } else if (published.length > 0) {
-        // Si une discipline n'a pas encore de projet publié, afficher uniquement un autre projet publié de l'admin
+        // Si une discipline n'a pas encore de projet publié, afficher uniquement un autre projet publié du catalogue
         map.set(srv.id, [published[idx % published.length]]);
       } else {
         map.set(srv.id, []);

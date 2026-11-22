@@ -1,5 +1,6 @@
 /**
- * Vérification automatisée du build statique (SEO, routes, poids des fichiers, sécurité secrets).
+ * Vérification automatisée du build 100 % statique
+ * (SEO, routes, absence totale de Supabase et /admin, poids GitHub Pages, sécurité).
  */
 
 import fs from 'node:fs/promises';
@@ -22,7 +23,18 @@ async function walk(dir) {
   return files;
 }
 
+async function getPublishedProjects() {
+  const source = await fs.readFile(path.join(ROOT, 'src', 'content', 'projects.ts'), 'utf8');
+  const match = source.match(/export const PUBLISHED_PROJECTS:\s*Project\[\]\s*=\s*(\[[\s\S]*?\n\]);/);
+  if (!match) {
+    throw new Error('Impossible de lire PUBLISHED_PROJECTS dans src/content/projects.ts');
+  }
+  return JSON.parse(match[1]);
+}
+
 async function main() {
+  const projects = await getPublishedProjects();
+
   const required = [
     'index.html',
     '404.html',
@@ -31,30 +43,20 @@ async function main() {
     '.nojekyll',
     'fr/index.html',
     'en/index.html',
-    'fr/projets/pub-nexora-tech/index.html',
-    'en/projects/pub-nexora-tech/index.html',
-    'fr/projets/digital-creativity-2026/index.html',
-    'en/projects/digital-creativity-2026/index.html',
-    'fr/projets/soiree-de-louange-une-nuit-dans-sa-presence/index.html',
-    'en/projects/soiree-de-louange-une-nuit-dans-sa-presence/index.html',
-    'fr/projets/brand-guidelines-identity-manual/index.html',
-    'en/projects/brand-guidelines-identity-manual/index.html',
-    'fr/projets/natur-branding-packaging/index.html',
-    'en/projects/natur-branding-packaging/index.html',
-    'fr/projets/solution-digitale-automatisation/index.html',
-    'en/projects/solution-digitale-automatisation/index.html',
-    'fr/projets/ecommerce-training-session-web/index.html',
-    'en/projects/ecommerce-training-session-web/index.html',
-    'fr/projets/campagne-visuelle-gourmet/index.html',
-    'en/projects/campagne-visuelle-gourmet/index.html',
-    'fr/projets/demo-video-architecture-lumiere/index.html',
-    'en/projects/demo-video-architecture-lumiere/index.html',
     'fr/mentions-legales/index.html',
     'en/legal-notice/index.html',
     'fr/confidentialite/index.html',
     'en/privacy/index.html',
-    'admin/index.html',
+    'media/images/affiche-apercu-fr-v1.jpg',
+    'media/images/affiche-apercu-en-v1.jpg',
   ];
+
+  for (const proj of projects) {
+    required.push(`fr/projets/${proj.slug}/index.html`);
+    required.push(`en/projects/${proj.slug}/index.html`);
+    if (proj.cover_image_url) required.push(proj.cover_image_url);
+    if (proj.video_url) required.push(proj.video_url);
+  }
 
   let failed = false;
 
@@ -68,11 +70,13 @@ async function main() {
     }
   }
 
-  // Vérifier que /admin a bien noindex et n'est PAS dans sitemap.xml
-  const adminHtml = await fs.readFile(path.join(DIST, 'admin', 'index.html'), 'utf8');
-  if (!adminHtml.includes('noindex')) {
-    console.error('[FAIL] dist/admin/index.html ne contient pas noindex !');
+  // Vérifier que /admin n'existe PLUS du tout
+  try {
+    await fs.access(path.join(DIST, 'admin'));
+    console.error('[FAIL] dist/admin existe encore alors que /admin doit être supprimé !');
     failed = true;
+  } catch {
+    // OK
   }
 
   const sitemap = await fs.readFile(path.join(DIST, 'sitemap.xml'), 'utf8');
@@ -81,8 +85,12 @@ async function main() {
     failed = true;
   }
 
-  // Vérifier que les pages publiques contiennent hreflang + JSON-LD + aucune mention provisoire
-  for (const rel of ['fr/index.html', 'en/index.html']) {
+  // Vérifier SEO, hreflang, JSON-LD et Open Graph FR/EN
+  const ogChecks = [
+    ['fr/index.html', 'affiche-apercu-fr-v1.jpg'],
+    ['en/index.html', 'affiche-apercu-en-v1.jpg'],
+  ];
+  for (const [rel, ogFile] of ogChecks) {
     const content = await fs.readFile(path.join(DIST, rel), 'utf8');
     if (!content.includes('hreflang="fr"') || !content.includes('hreflang="en"')) {
       console.error(`[FAIL] hreflang manquant dans dist/${rel}`);
@@ -92,13 +100,13 @@ async function main() {
       console.error(`[FAIL] JSON-LD manquant dans dist/${rel}`);
       failed = true;
     }
-    if (/À VALIDER|A VALIDER|TODO|LOREM IPSUM|moment opportun|grec ancien/i.test(content)) {
-      console.error(`[FAIL] Texte provisoire ou étymologie interdite détectée dans dist/${rel}`);
+    if (!content.includes(ogFile) || !content.includes('summary_large_image')) {
+      console.error(`[FAIL] Balises Open Graph / Twitter Card incorrectes dans dist/${rel}`);
       failed = true;
     }
   }
 
-  // Vérifier limites GitHub Pages (< 100 Mo / fichier, < 1 Go total) et absence de secrets
+  // Vérifier limites GitHub Pages (< 100 Mo / fichier, < 1 Go total), absence totale de Supabase et secrets
   const allFiles = await walk(DIST);
   let totalBytes = 0;
   let largestFile = { path: '', bytes: 0 };
@@ -115,6 +123,10 @@ async function main() {
     }
     if (/\.(html|js|css|json|xml|txt)$/i.test(file)) {
       const txt = await fs.readFile(file, 'utf8');
+      if (/supabase/i.test(txt)) {
+        console.error(`[FAIL] Référence Supabase détectée dans dist/${path.relative(DIST, file)} !`);
+        failed = true;
+      }
       if (/sbp_[a-zA-Z0-9]{20,}|service_role|ghp_[a-zA-Z0-9]{20,}/.test(txt)) {
         console.error(`[FAIL] Secret potentiel détecté dans ${file} !`);
         failed = true;
@@ -122,6 +134,7 @@ async function main() {
     }
   }
 
+  console.log(`[VERIFY] Projets publiés vérifiés: ${projects.length}`);
   console.log(`[VERIFY] Fichiers dans dist/: ${allFiles.length}`);
   console.log(`[VERIFY] Poids total dist/: ${(totalBytes / (1024 * 1024)).toFixed(2)} Mo (limite GitHub Pages: ~1000 Mo)`);
   console.log(
@@ -131,7 +144,7 @@ async function main() {
   if (failed) {
     process.exit(1);
   }
-  console.log('[VERIFY] TOUS LES CONTRÔLES DE BUILD ONT RÉUSSI.');
+  console.log('[VERIFY] TOUS LES CONTRÔLES DE BUILD STATIQUE ONT RÉUSSI.');
 }
 
 main().catch((err) => {

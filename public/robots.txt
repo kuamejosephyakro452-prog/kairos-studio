@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /kairos-studio/admin
 
 Sitemap: https://kuamejosephyakro452-prog.github.io/kairos-studio/sitemap.xml

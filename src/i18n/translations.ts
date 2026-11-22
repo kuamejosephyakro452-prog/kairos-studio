@@ -124,17 +124,13 @@ export interface SiteDictionary {
       servicePlaceholder: string;
       message: string;
       messagePlaceholder: string;
-      submit: string;
-      submitting: string;
-      successTitle: string;
-      successBody: string;
-      fallbackTitle: string;
-      fallbackBody: string;
-      fallbackButton: string;
+      submitWhatsapp: string;
+      submitEmail: string;
+      sentWhatsappNote: string;
+      sentEmailNote: string;
       validationName: string;
       validationEmail: string;
       validationMessage: string;
-      rateLimitError: string;
     };
   };
   projectDetail: {
@@ -265,7 +261,7 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
           description:
             'Création de chartes graphiques, logotypes, packagings et affiches haute définition pensés pour installer une présence visuelle immédiatement mémorable.',
           deliverables: ['Identité & logotype', 'Affiches print & digitales', 'Manuels de marque', 'Photomontage HD'],
-          previewAssetId: 'dc2026-instagram',
+          previewAssetId: 'col26-moisson',
           ambientColor: '#FF5A3C',
         },
         {
@@ -386,7 +382,7 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
             'Interfaces responsives & design systems',
             'Développement front-end (React, TypeScript, Vite)',
             'Chorégraphie GSAP, ScrollTrigger & WebGL GLSL',
-            'Bases sécurisées Supabase, RLS & automatisation',
+            'Bases de données cloud, sécurité & automatisation',
           ],
         },
       ],
@@ -430,18 +426,15 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         servicePlaceholder: 'Choisir une discipline',
         message: 'Votre projet',
         messagePlaceholder: 'Parlez-moi de votre objectif, de votre support et de vos attentes...',
-        submit: 'Envoyer ma demande',
-        submitting: 'Envoi en cours...',
-        successTitle: 'Message transmis avec succès',
-        successBody: 'Merci pour votre prise de contact. Joseph Kouamé vous répondra rapidement.',
-        fallbackTitle: 'Poursuivre directement sur WhatsApp',
-        fallbackBody:
-          'L’enregistrement direct n’a pas pu aboutir pour le moment. Votre message est prêt : cliquez ci-dessous pour l’envoyer immédiatement sur WhatsApp.',
-        fallbackButton: 'Envoyer sur WhatsApp',
+        submitWhatsapp: 'Envoyer par WhatsApp',
+        submitEmail: 'Envoyer par e-mail',
+        sentWhatsappNote:
+          'Votre message pré-rempli a été ouvert dans WhatsApp. Votre texte reste conservé ci-dessus.',
+        sentEmailNote:
+          'Votre application de messagerie a été ouverte avec votre demande pré-remplie.',
         validationName: 'Veuillez saisir votre nom (au moins 2 caractères).',
         validationEmail: 'Veuillez saisir une adresse e-mail valide.',
         validationMessage: 'Veuillez décrire votre demande en au moins 10 caractères.',
-        rateLimitError: 'Un message vient déjà d’être envoyé. Patientez quelques instants avant un nouvel envoi.',
       },
     },
     projectDetail: {
@@ -499,13 +492,13 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         {
           heading: '2. Hébergement & Infrastructure',
           paragraphs: [
-            'Le site vitrine statique est hébergé via GitHub Pages (GitHub, Inc.). Le formulaire de contact et l’administration privée reposent sur Supabase.',
+            'Ce portfolio est un site 100 % statique hébergé via GitHub Pages (GitHub, Inc.), sans base de données ni stockage serveur.',
           ],
         },
         {
           heading: '3. Propriété intellectuelle',
           paragraphs: [
-            'L’identité KAIROS STUDIO, le monogramme JK, le code, les textes et les créations originales présentées demeurent la propriété de leur auteur. Les éventuelles séquences de démonstration temporaires proviennent de banques libres de droits identifiées.',
+            'L’identité KAIROS STUDIO, le monogramme JK, le code, les textes et les créations originales présentées demeurent la propriété de leur auteur.',
           ],
         },
         {
@@ -517,12 +510,12 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       ],
       privacyTitle: 'Politique de confidentialité',
       privacyIntro:
-        'KAIROS STUDIO collecte uniquement les informations strictement nécessaires pour répondre à vos demandes.',
+        'KAIROS STUDIO ne collecte ni n’enregistre aucune donnée personnelle sur ce site statique.',
       privacySections: [
         {
           heading: '1. Données collectées',
           paragraphs: [
-            'Aucun traceur publicitaire ni inscription publique n’est utilisé. Seules les informations soumises volontairement dans le formulaire de contact (nom, e-mail, téléphone optionnel, discipline, message) sont enregistrées.',
+            'Aucun traceur publicitaire, cookie tiers ni base de données n’est utilisé. Le formulaire prépare directement votre message vers WhatsApp ou votre messagerie e-mail sans rien enregistrer sur un serveur.',
           ],
         },
         {
@@ -625,7 +618,7 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
           description:
             'Brand guidelines, logotypes, packaging direction, and high-resolution event posters engineered to establish instant visual authority.',
           deliverables: ['Visual identity & logos', 'Print & digital posters', 'Brand manuals', 'High-res compositing'],
-          previewAssetId: 'dc2026-instagram',
+          previewAssetId: 'col26-moisson',
           ambientColor: '#FF5A3C',
         },
         {
@@ -745,7 +738,7 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
             'Responsive interfaces & token design systems',
             'Front-end engineering (React, TypeScript, Vite)',
             'GSAP choreography, ScrollTrigger & WebGL GLSL',
-            'Secure Supabase databases, RLS & automation',
+            'Cloud databases, security & automation',
           ],
         },
       ],
@@ -789,18 +782,15 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         servicePlaceholder: 'Select a discipline',
         message: 'Project brief',
         messagePlaceholder: 'Share your goal, expected format, and creative direction...',
-        submit: 'Send inquiry',
-        submitting: 'Sending...',
-        successTitle: 'Message sent successfully',
-        successBody: 'Thank you for reaching out. Joseph Kouamé will reply promptly.',
-        fallbackTitle: 'Continue directly on WhatsApp',
-        fallbackBody:
-          'Direct storage is temporarily unavailable. Your brief is pre-filled below so you can reach the studio immediately on WhatsApp.',
-        fallbackButton: 'Send via WhatsApp',
+        submitWhatsapp: 'Send via WhatsApp',
+        submitEmail: 'Send by Email',
+        sentWhatsappNote:
+          'Your pre-filled message has been opened in WhatsApp. Your text remains preserved above.',
+        sentEmailNote:
+          'Your email app has been opened with your pre-filled inquiry.',
         validationName: 'Please enter your name (at least 2 characters).',
         validationEmail: 'Please enter a valid email address.',
         validationMessage: 'Please describe your inquiry in at least 10 characters.',
-        rateLimitError: 'A message was just sent. Please wait a moment before sending another.',
       },
     },
     projectDetail: {
@@ -857,13 +847,13 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         {
           heading: '2. Hosting & Infrastructure',
           paragraphs: [
-            'The static portfolio is hosted via GitHub Pages (GitHub, Inc.). Contact inquiries and private administration run on Supabase.',
+            'This portfolio is a 100% static website hosted on GitHub Pages (GitHub, Inc.), with no database or server-side storage.',
           ],
         },
         {
           heading: '3. Intellectual Property',
           paragraphs: [
-            'The KAIROS STUDIO brand, JK monogram, code, copy, and original studio works remain the property of their author. Temporary demonstration clips are clearly flagged and sourced under royalty-free licenses.',
+            'The KAIROS STUDIO brand, JK monogram, code, copy, and original studio works remain the property of their author.',
           ],
         },
         {
@@ -874,12 +864,12 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
         },
       ],
       privacyTitle: 'Privacy Policy',
-      privacyIntro: 'KAIROS STUDIO collects only the strict minimum required to answer your project inquiries.',
+      privacyIntro: 'KAIROS STUDIO collects and stores no personal data on this static website.',
       privacySections: [
         {
           heading: '1. Data Collected',
           paragraphs: [
-            'No advertising trackers or public accounts are used. Only information voluntarily submitted via the contact form (name, email, optional phone, discipline, message) is stored.',
+            'No advertising trackers, third-party cookies, or databases are used. The contact form prepares your message directly for WhatsApp or your email client without storing anything on a server.',
           ],
         },
         {

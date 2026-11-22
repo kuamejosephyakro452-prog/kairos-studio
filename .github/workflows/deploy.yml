@@ -32,17 +32,12 @@ jobs:
 
       - name: Build & Prerender static pages
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/kairos-studio/' }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://kuamejosephyakro452-prog.github.io/kairos-studio' }}
         run: npm run build
 
-      - name: Verify admin auth resilience, sync & build integrity
-        run: |
-          npm run test:admin-auth
-          npm run test:admin-sync
-          npm run test:smoke
+      - name: Verify static build integrity
+        run: npm run test:smoke
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

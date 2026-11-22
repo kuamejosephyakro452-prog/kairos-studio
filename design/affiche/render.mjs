@@ -17,6 +17,13 @@ const PUBLIC_OG_DIR = path.resolve(ROOT, 'public', 'media', 'images');
 fs.mkdirSync(EXPORTS_DIR, { recursive: true });
 fs.mkdirSync(QA_DIR, { recursive: true });
 
+const mediaManifest = JSON.parse(
+  fs.readFileSync(path.resolve(ROOT, 'src', 'content', 'media-manifest.json'), 'utf8')
+);
+const nexoraStillRel =
+  mediaManifest['nexora-still-01']?.variants?.[1]?.webp ||
+  mediaManifest['nexora-still-01']?.variants?.[0]?.webp;
+
 // Lecture seule directe des fichiers originaux (aucune copie, aucune modification)
 const ARTWORKS = {
   dc2026: {
@@ -28,7 +35,7 @@ const ARTWORKS = {
     mime: 'image/png',
   },
   nexora: {
-    path: path.resolve(ROOT, 'public', 'media', 'images', 'nexora-still-01-960w.webp'),
+    path: path.resolve(ROOT, 'public', nexoraStillRel),
     mime: 'image/webp',
   },
 };

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
+import { HERO_MEDIA } from '@/content/media';
 import { resolveAssetUrl } from '@/lib/media';
 import type { Locale } from '@/types/portfolio';
 import { FluidWebGLHero } from './FluidWebGLHero';
@@ -154,11 +155,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
                 muted
                 playsInline
                 preload="metadata"
-                poster={resolveAssetUrl('media/images/hero-showreel-poster-480w.webp')}
+                poster={resolveAssetUrl(HERO_MEDIA.posterWebp)}
                 aria-hidden="true"
               >
-                <source src={resolveAssetUrl('media/video/hero-showreel.webm')} type="video/webm" />
-                <source src={resolveAssetUrl('media/video/hero-showreel.mp4')} type="video/mp4" />
+                <source src={resolveAssetUrl(HERO_MEDIA.videoWebm)} type="video/webm" />
+                <source src={resolveAssetUrl(HERO_MEDIA.videoMp4)} type="video/mp4" />
               </video>
               <span className="absolute inset-0 flex items-center justify-center bg-black/25 text-white">
                 <Play className="h-4 w-4 fill-current" />

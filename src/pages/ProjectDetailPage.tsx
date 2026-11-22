@@ -12,13 +12,11 @@ import type { Locale, Project } from '@/types/portfolio';
 interface ProjectDetailPageProps {
   locale: Locale;
   projects: Project[];
-  projectsLoading?: boolean;
 }
 
 export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
   locale,
   projects,
-  projectsLoading = false,
 }) => {
   const { slug } = useParams<{ slug: string }>();
   const t = DICTIONARY[locale];
@@ -47,16 +45,6 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
   }, [lightboxIdx, project]);
 
   if (!project) {
-    if (projectsLoading) {
-      return (
-        <main
-          id="main-content"
-          className="flex min-h-[70vh] items-center justify-center bg-[var(--bg-primary)] font-mono-tech text-xs tracking-[0.24em] uppercase text-[var(--text-muted)]"
-        >
-          KAIROS STUDIO
-        </main>
-      );
-    }
     return <NotFoundPage locale={locale} />;
   }
 

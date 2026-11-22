@@ -9,11 +9,9 @@
     "build": "tsc -b && vite build && node scripts/prerender.mjs",
     "build:spa": "tsc -b && vite build",
     "preview": "vite preview",
+    "add-project": "node scripts/add-project.mjs",
     "media:images": "node scripts/process-media.mjs",
     "media:videos": "python scripts/process-videos.py",
-    "snapshot:sync": "node scripts/sync-snapshot.mjs",
-    "test:admin-auth": "node scripts/test-admin-auth.mjs",
-    "test:admin-sync": "node scripts/test-admin-sync.mjs",
     "test:smoke": "node scripts/verify-build.mjs"
   },
   "dependencies": {
@@ -23,7 +21,6 @@
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@fontsource-variable/syne": "^5.3.0",
-    "@supabase/supabase-js": "^2.49.1",
     "gsap": "^3.12.7",
     "lenis": "^1.2.3",
     "lucide-react": "^0.475.0",

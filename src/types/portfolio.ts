@@ -89,18 +89,6 @@ export interface Project {
   updated_at?: string;
 }
 
-export interface ContactMessage {
-  id: string;
-  full_name: string;
-  email: string;
-  phone?: string | null;
-  service?: string | null;
-  message: string;
-  locale: Locale;
-  is_read: boolean;
-  created_at: string;
-}
-
 export const ALL_CATEGORIES: ProjectCategory[] = [
   'graphic-design',
   'audiovisual',

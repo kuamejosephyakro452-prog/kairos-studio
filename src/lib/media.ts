@@ -1,11 +1,11 @@
-import manifestRaw from '@/data/media-manifest.json';
+import manifestRaw from '@/content/media-manifest.json';
 import type { MediaManifestEntry } from '@/types/portfolio';
 
 const manifest = manifestRaw as Record<string, MediaManifestEntry>;
 
 /**
  * Résout un chemin d'asset relatif au basePath Vite (compatible GitHub Pages et domaine personnalisé)
- * tout en laissant intactes les URLs absolues (ex. Supabase Storage).
+ * tout en laissant intactes les URLs absolues.
  */
 export function resolveAssetUrl(pathOrUrl: string | null | undefined): string {
   if (!pathOrUrl) return '';

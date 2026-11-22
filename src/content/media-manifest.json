@@ -1,0 +1,490 @@
+{
+  "col26-agir-vert": {
+    "width": 1200,
+    "height": 1800,
+    "aspectRatio": 0.6667,
+    "variants": [
+      {
+        "width": 480,
+        "height": 720,
+        "webp": "media/images/col26-agir-vert-480w-ecd3bfba.webp",
+        "avif": "media/images/col26-agir-vert-480w-07bc581c.avif"
+      },
+      {
+        "width": 960,
+        "height": 1440,
+        "webp": "media/images/col26-agir-vert-960w-70f9877b.webp",
+        "avif": "media/images/col26-agir-vert-960w-d9def35c.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1800,
+        "webp": "media/images/col26-agir-vert-1200w-91739399.webp",
+        "avif": "media/images/col26-agir-vert-1200w-3c19fb8e.avif"
+      }
+    ]
+  },
+  "col26-cap-essentiel": {
+    "width": 1200,
+    "height": 1500,
+    "aspectRatio": 0.8,
+    "variants": [
+      {
+        "width": 480,
+        "height": 600,
+        "webp": "media/images/col26-cap-essentiel-480w-86669f24.webp",
+        "avif": "media/images/col26-cap-essentiel-480w-48b0820e.avif"
+      },
+      {
+        "width": 960,
+        "height": 1200,
+        "webp": "media/images/col26-cap-essentiel-960w-6e639d33.webp",
+        "avif": "media/images/col26-cap-essentiel-960w-6ca42012.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1500,
+        "webp": "media/images/col26-cap-essentiel-1200w-ad84464f.webp",
+        "avif": "media/images/col26-cap-essentiel-1200w-721eb80b.avif"
+      }
+    ]
+  },
+  "col26-kiwi": {
+    "width": 1200,
+    "height": 1200,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/col26-kiwi-480w-1a1b41fa.webp",
+        "avif": "media/images/col26-kiwi-480w-cf0c1500.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/col26-kiwi-960w-76b278a1.webp",
+        "avif": "media/images/col26-kiwi-960w-894191b3.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1200,
+        "webp": "media/images/col26-kiwi-1200w-1a1790f9.webp",
+        "avif": "media/images/col26-kiwi-1200w-0a374c37.avif"
+      }
+    ]
+  },
+  "col26-moisson": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/col26-moisson-480w-3c18acd1.webp",
+        "avif": "media/images/col26-moisson-480w-63384337.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/col26-moisson-960w-08461092.webp",
+        "avif": "media/images/col26-moisson-960w-e79132b7.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/col26-moisson-1600w-f0629b7b.webp",
+        "avif": "media/images/col26-moisson-1600w-dcba77b9.avif"
+      }
+    ]
+  },
+  "col26-sans-sommeil": {
+    "width": 1200,
+    "height": 1200,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/col26-sans-sommeil-480w-7aa6f242.webp",
+        "avif": "media/images/col26-sans-sommeil-480w-edcfda21.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/col26-sans-sommeil-960w-d49e534c.webp",
+        "avif": "media/images/col26-sans-sommeil-960w-b659c0a4.avif"
+      },
+      {
+        "width": 1200,
+        "height": 1200,
+        "webp": "media/images/col26-sans-sommeil-1200w-b7280017.webp",
+        "avif": "media/images/col26-sans-sommeil-1200w-4e6f4342.avif"
+      }
+    ]
+  },
+  "col26-showreel-poster": {
+    "width": 1280,
+    "height": 720,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/col26-showreel-poster-480w-4c6007a8.webp",
+        "avif": "media/images/col26-showreel-poster-480w-eba571b5.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/col26-showreel-poster-960w-41914c9e.webp",
+        "avif": "media/images/col26-showreel-poster-960w-d33a1daa.avif"
+      },
+      {
+        "width": 1280,
+        "height": 720,
+        "webp": "media/images/col26-showreel-poster-1280w-9f3857c0.webp",
+        "avif": "media/images/col26-showreel-poster-1280w-f57bbc1f.avif"
+      }
+    ]
+  },
+  "hero-showreel-poster": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/hero-showreel-poster-480w-9c9a99b8.webp",
+        "avif": "media/images/hero-showreel-poster-480w-cc8509be.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/hero-showreel-poster-960w-cdf37f1c.webp",
+        "avif": "media/images/hero-showreel-poster-960w-ddfdbee2.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/hero-showreel-poster-1600w-b3cccd03.webp",
+        "avif": "media/images/hero-showreel-poster-1600w-8c6137b6.avif"
+      }
+    ]
+  },
+  "louange-carre": {
+    "width": 1080,
+    "height": 1080,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/louange-carre-480w-8d196f5c.webp",
+        "avif": "media/images/louange-carre-480w-49dcd5ff.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/louange-carre-960w-8328e75c.webp",
+        "avif": "media/images/louange-carre-960w-36211630.avif"
+      },
+      {
+        "width": 1080,
+        "height": 1080,
+        "webp": "media/images/louange-carre-1080w-bed7a9a0.webp",
+        "avif": "media/images/louange-carre-1080w-a772fe87.avif"
+      }
+    ]
+  },
+  "louange-whatsapp": {
+    "width": 1080,
+    "height": 1920,
+    "aspectRatio": 0.5625,
+    "variants": [
+      {
+        "width": 480,
+        "height": 853,
+        "webp": "media/images/louange-whatsapp-480w-f0a78bfa.webp",
+        "avif": "media/images/louange-whatsapp-480w-dbf9969f.avif"
+      },
+      {
+        "width": 960,
+        "height": 1707,
+        "webp": "media/images/louange-whatsapp-960w-ec61b0ff.webp",
+        "avif": "media/images/louange-whatsapp-960w-e46f8c1a.avif"
+      },
+      {
+        "width": 1080,
+        "height": 1920,
+        "webp": "media/images/louange-whatsapp-1080w-0b173c53.webp",
+        "avif": "media/images/louange-whatsapp-1080w-c83ccb0b.avif"
+      }
+    ]
+  },
+  "nexora-logo": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-logo-480w-4c45349a.webp",
+        "avif": "media/images/nexora-logo-480w-a9156c66.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-logo-960w-2e83e061.webp",
+        "avif": "media/images/nexora-logo-960w-db93eca6.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-logo-1600w-e71d495c.webp",
+        "avif": "media/images/nexora-logo-1600w-134fec13.avif"
+      }
+    ]
+  },
+  "nexora-packshot": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-packshot-480w-aa409432.webp",
+        "avif": "media/images/nexora-packshot-480w-be4fb701.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-packshot-960w-d0aa07e7.webp",
+        "avif": "media/images/nexora-packshot-960w-8715ed5a.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-packshot-1600w-2c26760a.webp",
+        "avif": "media/images/nexora-packshot-1600w-c154440c.avif"
+      }
+    ]
+  },
+  "nexora-still-01": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-01-480w-6304a6df.webp",
+        "avif": "media/images/nexora-still-01-480w-cae3e95b.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-01-960w-dcb26ff4.webp",
+        "avif": "media/images/nexora-still-01-960w-c3ce0d01.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-01-1600w-3629a023.webp",
+        "avif": "media/images/nexora-still-01-1600w-8ce2ac6b.avif"
+      }
+    ]
+  },
+  "nexora-still-02": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-02-480w-cbbac92d.webp",
+        "avif": "media/images/nexora-still-02-480w-b480ad1e.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-02-960w-6495fdef.webp",
+        "avif": "media/images/nexora-still-02-960w-4c2cb063.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-02-1600w-0e0916f0.webp",
+        "avif": "media/images/nexora-still-02-1600w-fc35882f.avif"
+      }
+    ]
+  },
+  "nexora-still-03": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-03-480w-1cac55d8.webp",
+        "avif": "media/images/nexora-still-03-480w-e89985a9.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-03-960w-56b70d37.webp",
+        "avif": "media/images/nexora-still-03-960w-cad43dfe.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-03-1600w-50621ec2.webp",
+        "avif": "media/images/nexora-still-03-1600w-ae6622c6.avif"
+      }
+    ]
+  },
+  "nexora-still-04": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/nexora-still-04-480w-d531b221.webp",
+        "avif": "media/images/nexora-still-04-480w-1f684374.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/nexora-still-04-960w-38069f48.webp",
+        "avif": "media/images/nexora-still-04-960w-0e150677.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/nexora-still-04-1600w-d4f1eaab.webp",
+        "avif": "media/images/nexora-still-04-1600w-47673d06.avif"
+      }
+    ]
+  },
+  "pub-nexora-poster": {
+    "width": 1600,
+    "height": 900,
+    "aspectRatio": 1.7778,
+    "variants": [
+      {
+        "width": 480,
+        "height": 270,
+        "webp": "media/images/pub-nexora-poster-480w-9a1486e6.webp",
+        "avif": "media/images/pub-nexora-poster-480w-527c1632.avif"
+      },
+      {
+        "width": 960,
+        "height": 540,
+        "webp": "media/images/pub-nexora-poster-960w-d5cf461b.webp",
+        "avif": "media/images/pub-nexora-poster-960w-244c17a8.avif"
+      },
+      {
+        "width": 1600,
+        "height": 900,
+        "webp": "media/images/pub-nexora-poster-1600w-6d0f564a.webp",
+        "avif": "media/images/pub-nexora-poster-1600w-42d77761.avif"
+      }
+    ]
+  },
+  "tpl-audio-product": {
+    "width": 446,
+    "height": 446,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 446,
+        "height": 446,
+        "webp": "media/images/tpl-audio-product-446w-563d51ab.webp",
+        "avif": "media/images/tpl-audio-product-446w-4dae4f75.avif"
+      }
+    ]
+  },
+  "tpl-ecommerce-session": {
+    "width": 1564,
+    "height": 1564,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/tpl-ecommerce-session-480w-7eef4f20.webp",
+        "avif": "media/images/tpl-ecommerce-session-480w-f52ca97d.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/tpl-ecommerce-session-960w-2d751a9a.webp",
+        "avif": "media/images/tpl-ecommerce-session-960w-cad6a3c8.avif"
+      },
+      {
+        "width": 1400,
+        "height": 1400,
+        "webp": "media/images/tpl-ecommerce-session-1400w-8288f1fd.webp",
+        "avif": "media/images/tpl-ecommerce-session-1400w-fc30b6e3.avif"
+      }
+    ]
+  },
+  "tpl-gourmet-campaign": {
+    "width": 1488,
+    "height": 1488,
+    "aspectRatio": 1,
+    "variants": [
+      {
+        "width": 480,
+        "height": 480,
+        "webp": "media/images/tpl-gourmet-campaign-480w-5f2dd379.webp",
+        "avif": "media/images/tpl-gourmet-campaign-480w-a9f19a1e.avif"
+      },
+      {
+        "width": 960,
+        "height": 960,
+        "webp": "media/images/tpl-gourmet-campaign-960w-3f087e07.webp",
+        "avif": "media/images/tpl-gourmet-campaign-960w-fc8838e4.avif"
+      },
+      {
+        "width": 1400,
+        "height": 1400,
+        "webp": "media/images/tpl-gourmet-campaign-1400w-6e5ae90e.webp",
+        "avif": "media/images/tpl-gourmet-campaign-1400w-61a9a4bc.avif"
+      }
+    ]
+  },
+  "tpl-solution-global": {
+    "width": 1500,
+    "height": 1912,
+    "aspectRatio": 0.7845,
+    "variants": [
+      {
+        "width": 480,
+        "height": 612,
+        "webp": "media/images/tpl-solution-global-480w-ed1d33b5.webp",
+        "avif": "media/images/tpl-solution-global-480w-5f9fa1ef.avif"
+      },
+      {
+        "width": 960,
+        "height": 1224,
+        "webp": "media/images/tpl-solution-global-960w-081bafbd.webp",
+        "avif": "media/images/tpl-solution-global-960w-4be5389c.avif"
+      },
+      {
+        "width": 1500,
+        "height": 1912,
+        "webp": "media/images/tpl-solution-global-1500w-82d39705.webp",
+        "avif": "media/images/tpl-solution-global-1500w-dfe3e63d.avif"
+      }
+    ]
+  }
+}

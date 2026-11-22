@@ -13,27 +13,15 @@ const SITE_URL = (
 ).replace(/\/+$/, '');
 const BASE_PATH = (process.env.VITE_BASE_PATH || '/kairos-studio/').replace(/\/+$/, '') + '/';
 
-// Lecture légère des slugs publiés depuis src/data/projects.snapshot.ts (ou JSON synchronisé)
+// Lecture directe du catalogue statique officiel dans src/content/projects.ts
 async function getPublishedProjectsMeta() {
-  const snapshotTs = await fs.readFile(path.join(ROOT, 'src', 'data', 'projects.snapshot.ts'), 'utf8');
-  const publishedBlock = snapshotTs.split('export const DRAFT_PROJECTS_SEED')[0];
-
-  const projects = [];
-  const regex =
-    /slug:\s*'([^']+)'[\s\S]*?title_fr:\s*'([^']+)'[\s\S]*?title_en:\s*'([^']+)'[\s\S]*?subtitle_fr:\s*'([^']+)'[\s\S]*?subtitle_en:\s*'([^']+)'[\s\S]*?cover_image_url:\s*'([^']+)'/g;
-
-  let match;
-  while ((match = regex.exec(publishedBlock)) !== null) {
-    projects.push({
-      slug: match[1],
-      title_fr: match[2],
-      title_en: match[3],
-      subtitle_fr: match[4],
-      subtitle_en: match[5],
-      cover_image_url: match[6],
-    });
+  const source = await fs.readFile(path.join(ROOT, 'src', 'content', 'projects.ts'), 'utf8');
+  const match = source.match(/export const PUBLISHED_PROJECTS:\s*Project\[\]\s*=\s*(\[[\s\S]*?\n\]);/);
+  if (!match) {
+    throw new Error('Impossible de lire PUBLISHED_PROJECTS dans src/content/projects.ts');
   }
-  return projects;
+  const parsed = JSON.parse(match[1]);
+  return parsed.filter((p) => p.status === 'published');
 }
 
 function escapeHtml(str) {
@@ -237,18 +225,6 @@ async function main() {
     await writeRouteHtml(r.path, buildHtml(baseTemplate, r));
   }
 
-  // Route privée /admin (strictement noindex, hors sitemap)
-  await writeRouteHtml(
-    '/admin',
-    buildHtml(baseTemplate, {
-      path: '/admin',
-      lang: 'fr',
-      title: 'Administration privée — KAIROS STUDIO',
-      description: 'Espace privé d’administration KAIROS STUDIO.',
-      noindex: true,
-    })
-  );
-
   // Racine `/` : conserve l'app SPA + balises SEO pointant vers /fr (redirection React immédiate vers /fr)
   const rootHtml = buildHtml(baseTemplate, {
     path: '/fr',
@@ -285,7 +261,7 @@ async function main() {
 `;
   await fs.writeFile(path.join(DIST, '404.html'), fallback404, 'utf8');
 
-  // sitemap.xml (uniquement routes publiques, JAMAIS /admin)
+  // sitemap.xml (uniquement routes publiques)
   const today = new Date().toISOString().split('T')[0];
   const urlEntries = routes
     .map((r) => {
@@ -320,7 +296,7 @@ ${urlEntries}
   // .nojekyll pour GitHub Pages
   await fs.writeFile(path.join(DIST, '.nojekyll'), '', 'utf8');
 
-  console.log(`[PRERENDER] ${routes.length} routes publiques + /admin (noindex) + 404.html + sitemap.xml générés.`);
+  console.log(`[PRERENDER] ${routes.length} routes publiques + 404.html + sitemap.xml générés.`);
 }
 
 main().catch((err) => {
