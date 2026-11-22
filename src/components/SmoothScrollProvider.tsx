@@ -1,9 +1,4 @@
 import React, { useEffect } from 'react';
-import Lenis from 'lenis';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
@@ -12,24 +7,48 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const coarse = window.matchMedia('(pointer: coarse)').matches;
     if (reduced || coarse) return;
 
-    const lenis = new Lenis({
-      duration: 1.05,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      touchMultiplier: 1.5,
-    });
+    let cancelled = false;
+    let cleanup: (() => void) | null = null;
 
-    lenis.on('scroll', ScrollTrigger.update);
+    // Charge Lenis + ScrollTrigger en différé (desktop uniquement) pour ne pas bloquer le premier rendu
+    const init = async () => {
+      const [{ default: Lenis }, { default: gsap }, { ScrollTrigger }] = await Promise.all([
+        import('lenis'),
+        import('gsap'),
+        import('gsap/ScrollTrigger'),
+      ]);
+      if (cancelled) return;
 
-    const tick = (time: number) => {
-      lenis.raf(time * 1000);
+      gsap.registerPlugin(ScrollTrigger);
+      const lenis = new Lenis({
+        duration: 1.05,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        touchMultiplier: 1.5,
+      });
+
+      lenis.on('scroll', ScrollTrigger.update);
+
+      const tick = (time: number) => {
+        lenis.raf(time * 1000);
+      };
+      gsap.ticker.add(tick);
+      gsap.ticker.lagSmoothing(0);
+
+      cleanup = () => {
+        gsap.ticker.remove(tick);
+        lenis.destroy();
+      };
     };
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
+
+    const timer = window.setTimeout(() => {
+      void init();
+    }, 120);
 
     return () => {
-      gsap.ticker.remove(tick);
-      lenis.destroy();
+      cancelled = true;
+      window.clearTimeout(timer);
+      cleanup?.();
     };
   }, []);
 

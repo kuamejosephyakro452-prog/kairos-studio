@@ -32,7 +32,7 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;');
 }
 
-function buildHtml(template, route) {
+function buildHtml(template, route, preloadLinks = []) {
   let html = template;
   html = html.replace(/<html lang="[^"]*"/, `<html lang="${route.lang}"`);
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeHtml(route.title)}</title>`);
@@ -55,6 +55,7 @@ function buildHtml(template, route) {
   const ogAlt = route.ogAlt || defaultOgAlt;
 
   const headInject = [
+    ...preloadLinks,
     `<meta name="robots" content="${route.noindex ? 'noindex, nofollow' : 'index, follow'}" />`,
     `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,
     route.altFr ? `<link rel="alternate" hreflang="fr" href="${escapeHtml(`${SITE_URL}${route.altFr}`)}" />` : '',
@@ -106,6 +107,15 @@ async function writeRouteHtml(relPath, html) {
 async function main() {
   const baseTemplate = await fs.readFile(path.join(DIST, 'index.html'), 'utf8');
   const projects = await getPublishedProjectsMeta();
+
+  // Préchargement de la police titre critique (Syne) visible dès le premier rendu
+  const assetFiles = await fs.readdir(path.join(DIST, 'assets'));
+  const criticalFontFiles = assetFiles.filter(
+    (f) => f.endsWith('.woff2') && f.startsWith('syne-latin-wght-normal-')
+  );
+  const preloadLinks = criticalFontFiles.map(
+    (f) => `<link rel="preload" as="font" type="font/woff2" crossorigin href="${BASE_PATH}assets/${f}" />`
+  );
 
   const orgJsonLd = {
     '@context': 'https://schema.org',
@@ -222,7 +232,7 @@ async function main() {
 
   // Générer toutes les pages publiques prérendues
   for (const r of routes) {
-    await writeRouteHtml(r.path, buildHtml(baseTemplate, r));
+    await writeRouteHtml(r.path, buildHtml(baseTemplate, r, preloadLinks));
   }
 
   // Racine `/` : conserve l'app SPA + balises SEO pointant vers /fr (redirection React immédiate vers /fr)
@@ -235,7 +245,7 @@ async function main() {
     altFr: '/fr',
     altEn: '/en',
     jsonLd: orgJsonLd,
-  });
+  }, preloadLinks);
   await writeRouteHtml('/', rootHtml);
 
   // 404.html de secours pour GitHub Pages (rechargement profond de toute route SPA)

@@ -1,13 +1,15 @@
-import React, { useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
 import { HERO_MEDIA } from '@/content/media';
 import { resolveAssetUrl } from '@/lib/media';
 import type { Locale } from '@/types/portfolio';
-import { FluidWebGLHero } from './FluidWebGLHero';
 import { InteractiveMonogramJK } from './InteractiveMonogramJK';
 import { Magnetic } from './Magnetic';
+
+const FluidWebGLHero = lazy(() =>
+  import('./FluidWebGLHero').then((m) => ({ default: m.FluidWebGLHero }))
+);
 
 interface HeroSectionProps {
   locale: Locale;
@@ -16,60 +18,100 @@ interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
   const t = DICTIONARY[locale];
   const heroRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [mountDesktopWebGL, setMountDesktopWebGL] = useState(false);
+  const [loadHeroVideo, setLoadHeroVideo] = useState(false);
 
+  // Charge WebGL (desktop uniquement) et la boucle vidéo capsule après le premier rendu
   useEffect(() => {
-    if (!heroRef.current) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof window === 'undefined') return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isDesktop = window.innerWidth >= 768;
 
-    const ctx = gsap.context(() => {
-      gsap.from('.hero-word', {
-        yPercent: 115,
-        opacity: 0,
-        duration: 0.95,
-        stagger: 0.065,
-        ease: 'power4.out',
-      });
-      gsap.from('.hero-stagger', {
-        y: 26,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.09,
-        ease: 'power3.out',
-        delay: 0.18,
-      });
-    }, heroRef);
+    const win = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
 
-    return () => ctx.revert();
-  }, [locale]);
+    let idleId = 0;
+    const startDeferred = () => {
+      if (!reduced && isDesktop) setMountDesktopWebGL(true);
+      if (!reduced) setLoadHeroVideo(true);
+    };
+
+    if (win.requestIdleCallback) {
+      idleId = win.requestIdleCallback(startDeferred, { timeout: 1400 });
+    } else {
+      idleId = window.setTimeout(startDeferred, 900);
+    }
+
+    return () => {
+      if (win.cancelIdleCallback) win.cancelIdleCallback(idleId);
+      else window.clearTimeout(idleId);
+    };
+  }, []);
+
+  // Met automatiquement la vidéo capsule en pause hors écran pour préserver CPU/batterie
+  useEffect(() => {
+    if (!loadHeroVideo) return;
+    const video = videoRef.current;
+    const hero = heroRef.current;
+    if (!video || !hero || typeof IntersectionObserver === 'undefined') return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(hero);
+    return () => io.disconnect();
+  }, [loadHeroVideo]);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  let wordSeq = 0;
   const renderLine = (text: string, accent = false) =>
-    text.split(' ').map((word, idx) => (
-      <span
-        key={`${word}-${idx}`}
-        className="inline-block overflow-hidden align-top pb-[0.14em] pr-[0.06em] -mb-[0.12em] mr-[0.2em]"
-      >
-        <span className={`hero-word inline-block ${accent ? 'text-accent-gradient' : ''}`}>
-          {word}
+    text.split(' ').map((word, idx) => {
+      const i = wordSeq++;
+      return (
+        <span
+          key={`${word}-${idx}`}
+          className="inline-block overflow-hidden align-top pb-[0.14em] pr-[0.06em] -mb-[0.12em] mr-[0.2em]"
+        >
+          <span
+            className={`hero-word hero-word-anim inline-block ${accent ? 'text-accent-gradient' : ''}`}
+            style={{ '--i': i } as React.CSSProperties}
+          >
+            {word}
+          </span>
         </span>
-      </span>
-    ));
+      );
+    });
 
   return (
     <section
       ref={heroRef}
+      key={locale}
       className="relative flex min-h-[100svh] flex-col justify-between overflow-hidden bg-[var(--bg-primary)] pt-28 pb-20 text-[var(--text-primary)] sm:pt-32 sm:pb-24"
     >
       {/* Repli CSS mesh gradient haute performance (mobile & avant WebGL) */}
       <div className="bg-mesh-ambient pointer-events-none absolute inset-0 opacity-95" />
 
-      {/* Shader WebGL fluide GLSL chargé en différé (desktop) */}
-      <div className="pointer-events-none absolute inset-0 opacity-90">
-        <FluidWebGLHero />
-      </div>
+      {/* Shader WebGL fluide GLSL chargé uniquement sur desktop après le premier rendu */}
+      {mountDesktopWebGL && (
+        <div className="pointer-events-none absolute inset-0 opacity-90">
+          <Suspense fallback={null}>
+            <FluidWebGLHero />
+          </Suspense>
+        </div>
+      )}
 
       {/* Voile d'équilibre pour garantir un contraste AA constant */}
       <div
@@ -85,7 +127,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
       <div className="relative z-10 mx-auto my-auto grid w-full max-w-[1440px] gap-12 px-5 py-6 sm:px-8 lg:grid-cols-12 lg:items-center lg:px-12">
         {/* Colonne gauche : promesse client massive + CTA */}
         <div className="lg:col-span-7">
-          <div className="hero-stagger mb-6 inline-flex items-center gap-3 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)]/70 px-4 py-1.5 backdrop-blur-md">
+          <div
+            className="hero-stagger hero-stagger-anim mb-6 inline-flex items-center gap-3 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)]/70 px-4 py-1.5 backdrop-blur-md"
+            style={{ '--i': 0 } as React.CSSProperties}
+          >
             <span
               aria-hidden="true"
               className="h-2 w-2 rounded-full bg-accent-gradient shadow-[0_0_12px_var(--accent-1)]"
@@ -101,15 +146,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
             <span className="block">{renderLine(t.hero.headlineLine3, true)}</span>
           </h1>
 
-          <p className="hero-stagger font-serif-accent mt-6 text-xl italic tracking-wide text-[var(--accent-text)] sm:text-2xl">
+          <p
+            className="hero-stagger hero-stagger-anim font-serif-accent mt-6 text-xl italic tracking-wide text-[var(--accent-text)] sm:text-2xl"
+            style={{ '--i': 1 } as React.CSSProperties}
+          >
             {t.hero.signature}
           </p>
 
-          <p className="hero-stagger mt-4 max-w-xl text-sm leading-relaxed text-[var(--text-muted)] sm:text-base">
+          <p
+            className="hero-stagger hero-stagger-anim mt-4 max-w-xl text-sm leading-relaxed text-[var(--text-muted)] sm:text-base"
+            style={{ '--i': 2 } as React.CSSProperties}
+          >
             {t.hero.clientPitch}
           </p>
 
-          <div className="hero-stagger mt-8 flex flex-wrap items-center gap-4">
+          <div
+            className="hero-stagger hero-stagger-anim mt-8 flex flex-wrap items-center gap-4"
+            style={{ '--i': 3 } as React.CSSProperties}
+          >
             <Magnetic>
               <button
                 type="button"
@@ -136,10 +190,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
         </div>
 
         {/* Colonne droite : Objet signature JK interactif + capsule showreel muet */}
-        <div className="hero-stagger relative flex flex-col items-center gap-6 lg:col-span-5">
+        <div
+          className="hero-stagger hero-stagger-anim relative flex flex-col items-center gap-6 lg:col-span-5"
+          style={{ '--i': 4 } as React.CSSProperties}
+        >
           <InteractiveMonogramJK size="hero" caption={t.hero.monogramCaption} />
 
-          {/* Capsule showreel muet flottante */}
+          {/* Capsule showreel muet flottante : affiche le poster WebP immédiatement puis charge la boucle vidéo en différé */}
           <button
             type="button"
             onClick={() => scrollTo('works')}
@@ -147,19 +204,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
             className="glass-panel group relative flex w-full max-w-sm cursor-pointer items-center gap-4 overflow-hidden rounded-2xl p-2.5 text-left transition-transform duration-300 hover:-translate-y-1 hover:border-[var(--accent-1)]"
           >
             <div className="relative h-16 w-28 shrink-0 overflow-hidden rounded-xl bg-black">
-              <video
-                className="h-full w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="metadata"
-                poster={resolveAssetUrl(HERO_MEDIA.posterWebp)}
-                aria-hidden="true"
-              >
-                <source src={resolveAssetUrl(HERO_MEDIA.videoWebm)} type="video/webm" />
-                <source src={resolveAssetUrl(HERO_MEDIA.videoMp4)} type="video/mp4" />
-              </video>
+              {loadHeroVideo ? (
+                <video
+                  ref={videoRef}
+                  className="h-full w-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="none"
+                  poster={resolveAssetUrl(HERO_MEDIA.posterWebp)}
+                  aria-hidden="true"
+                >
+                  <source src={resolveAssetUrl(HERO_MEDIA.videoWebm)} type="video/webm" />
+                  <source src={resolveAssetUrl(HERO_MEDIA.videoMp4)} type="video/mp4" />
+                </video>
+              ) : (
+                <img
+                  src={resolveAssetUrl(HERO_MEDIA.posterWebp)}
+                  alt=""
+                  width={112}
+                  height={64}
+                  decoding="async"
+                  className="h-full w-full object-cover"
+                  aria-hidden="true"
+                />
+              )}
               <span className="absolute inset-0 flex items-center justify-center bg-black/25 text-white">
                 <Play className="h-4 w-4 fill-current" />
               </span>
@@ -180,7 +250,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
       </div>
 
       {/* Pied du Hero : centré et dégagé des pilules flottantes bas gauche/droite */}
-      <div className="hero-stagger relative z-10 mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-center gap-6 border-t border-[var(--border-subtle)] px-5 pt-5 font-mono-tech text-[10px] tracking-[0.22em] uppercase text-[var(--text-muted)] sm:justify-between sm:px-8 lg:px-12">
+      <div
+        className="hero-stagger hero-stagger-anim relative z-10 mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-center gap-6 border-t border-[var(--border-subtle)] px-5 pt-5 font-mono-tech text-[10px] tracking-[0.22em] uppercase text-[var(--text-muted)] sm:justify-between sm:px-8 lg:px-12"
+        style={{ '--i': 5 } as React.CSSProperties}
+      >
         <span className="hidden md:inline">
           DESIGN · FILM · DIGITAL · TIC · WEB
         </span>

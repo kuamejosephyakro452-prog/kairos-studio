@@ -1,34 +1,64 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DICTIONARY } from '@/i18n/translations';
 import { HeroSection } from '@/components/HeroSection';
-import { ManifestoSection } from '@/components/ManifestoSection';
-import { ServicesStage } from '@/components/ServicesStage';
-import { WorksShowcase } from '@/components/WorksShowcase';
-import { FounderStage } from '@/components/FounderStage';
-import { KineticMarquee } from '@/components/KineticMarquee';
-import { ContactSection } from '@/components/ContactSection';
 import { SeoHead } from '@/components/SeoHead';
-import type { Locale, Project, ProjectCategory } from '@/types/portfolio';
+import type { Locale, ProjectCategory } from '@/types/portfolio';
+
+const HomeBelowFold = lazy(() =>
+  import('@/components/HomeBelowFold').then((m) => ({ default: m.HomeBelowFold }))
+);
 
 interface HomePageProps {
   locale: Locale;
-  projects: Project[];
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ locale, projects }) => {
+export const HomePage: React.FC<HomePageProps> = ({ locale }) => {
   const t = DICTIONARY[locale];
   const [activeCategory, setActiveCategory] = useState<ProjectCategory | 'all'>('all');
   const location = useLocation();
+  const [mountBelowFold, setMountBelowFold] = useState<boolean>(() => Boolean(location.hash));
+
+  // Diffère le chargement des sections sous la ligne de flottaison (GSAP/ScrollTrigger/galerie)
+  // juste après le premier rendu du Hero, ou immédiatement dès le premier scroll / ancre #hash.
+  useEffect(() => {
+    if (mountBelowFold) return;
+    if (location.hash) {
+      setMountBelowFold(true);
+      return;
+    }
+
+    const activate = () => setMountBelowFold(true);
+    window.addEventListener('scroll', activate, { passive: true, once: true });
+    window.addEventListener('wheel', activate, { passive: true, once: true });
+    window.addEventListener('touchstart', activate, { passive: true, once: true });
+
+    const timer = window.setTimeout(activate, 450);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('scroll', activate);
+      window.removeEventListener('wheel', activate);
+      window.removeEventListener('touchstart', activate);
+    };
+  }, [mountBelowFold, location.hash]);
 
   useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.replace('#', '');
-      const timer = window.setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 120);
-      return () => window.clearTimeout(timer);
-    }
+    if (!location.hash) return;
+    const id = location.hash.replace('#', '');
+    let attempts = 0;
+    let timer = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      if (attempts++ < 15) {
+        timer = window.setTimeout(tryScroll, 120);
+      }
+    };
+    timer = window.setTimeout(tryScroll, 100);
+    return () => window.clearTimeout(timer);
   }, [location.hash]);
 
   const jsonLd = {
@@ -68,21 +98,17 @@ export const HomePage: React.FC<HomePageProps> = ({ locale, projects }) => {
 
       <main id="main-content">
         <HeroSection locale={locale} />
-        <ManifestoSection locale={locale} />
-        <ServicesStage
-          locale={locale}
-          projects={projects}
-          onSelectCategory={(cat) => setActiveCategory(cat)}
-        />
-        <WorksShowcase
-          locale={locale}
-          projects={projects}
-          activeCategory={activeCategory}
-          onChangeCategory={setActiveCategory}
-        />
-        <FounderStage locale={locale} />
-        <KineticMarquee locale={locale} />
-        <ContactSection locale={locale} />
+        {mountBelowFold ? (
+          <Suspense fallback={<div className="min-h-screen bg-[var(--bg-elevated)]" aria-hidden="true" />}>
+            <HomeBelowFold
+              locale={locale}
+              activeCategory={activeCategory}
+              onChangeCategory={setActiveCategory}
+            />
+          </Suspense>
+        ) : (
+          <div className="min-h-screen bg-[var(--bg-elevated)]" aria-hidden="true" />
+        )}
       </main>
     </>
   );

@@ -33,7 +33,8 @@ export const ResponsivePicture: React.FC<ResponsivePictureProps> = ({
           width={entry.width}
           height={entry.height}
           loading={priority ? 'eager' : 'lazy'}
-          decoding={priority ? 'sync' : 'async'}
+          decoding="async"
+          fetchPriority={priority ? 'high' : 'low'}
           className={imgClassName}
         />
       </picture>
@@ -45,7 +46,8 @@ export const ResponsivePicture: React.FC<ResponsivePictureProps> = ({
       src={resolveAssetUrl(fallbackUrl)}
       alt={alt}
       loading={priority ? 'eager' : 'lazy'}
-      decoding={priority ? 'sync' : 'async'}
+      decoding="async"
+      fetchPriority={priority ? 'high' : 'low'}
       className={`${imgClassName} ${className}`}
     />
   );

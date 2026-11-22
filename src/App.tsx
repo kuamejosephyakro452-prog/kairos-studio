@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -7,9 +7,7 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
-import { PUBLISHED_PROJECTS } from '@/content/projects';
 import { SmoothScrollProvider } from '@/components/SmoothScrollProvider';
-import { CustomCursor } from '@/components/CustomCursor';
 import { FullscreenNav } from '@/components/FullscreenNav';
 import { Footer } from '@/components/Footer';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
@@ -17,6 +15,9 @@ import { HomePage } from '@/pages/HomePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import type { FontPairId, Locale } from '@/types/portfolio';
 
+const CustomCursor = lazy(() =>
+  import('@/components/CustomCursor').then((m) => ({ default: m.CustomCursor }))
+);
 const ProjectDetailPage = lazy(() =>
   import('@/pages/ProjectDetailPage').then((m) => ({ default: m.ProjectDetailPage }))
 );
@@ -49,6 +50,7 @@ const PublicLayout: React.FC<{
 }> = ({ locale, children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [enableDesktopCursor, setEnableDesktopCursor] = useState(false);
 
   useEffect(() => {
     try {
@@ -57,6 +59,15 @@ const PublicLayout: React.FC<{
       // ignore
     }
   }, [locale]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (fine && !reduced) {
+      setEnableDesktopCursor(true);
+    }
+  }, []);
 
   const handleSwitchLocale = (next: Locale) => {
     if (next === locale) return;
@@ -72,7 +83,11 @@ const PublicLayout: React.FC<{
   return (
     <SmoothScrollProvider>
       <div className="film-grain" aria-hidden="true" />
-      <CustomCursor />
+      {enableDesktopCursor && (
+        <Suspense fallback={null}>
+          <CustomCursor />
+        </Suspense>
+      )}
       <FullscreenNav locale={locale} onSwitchLocale={handleSwitchLocale} />
       <div key={location.pathname} className="page-transition">
         {children}
@@ -122,7 +137,7 @@ export const App: React.FC = () => {
             path="/fr"
             element={
               <PublicLayout locale="fr">
-                <HomePage locale="fr" projects={PUBLISHED_PROJECTS} />
+                <HomePage locale="fr" />
               </PublicLayout>
             }
           />
@@ -130,7 +145,7 @@ export const App: React.FC = () => {
             path="/fr/projets/:slug"
             element={
               <PublicLayout locale="fr">
-                <ProjectDetailPage locale="fr" projects={PUBLISHED_PROJECTS} />
+                <ProjectDetailPage locale="fr" />
               </PublicLayout>
             }
           />
@@ -156,7 +171,7 @@ export const App: React.FC = () => {
             path="/en"
             element={
               <PublicLayout locale="en">
-                <HomePage locale="en" projects={PUBLISHED_PROJECTS} />
+                <HomePage locale="en" />
               </PublicLayout>
             }
           />
@@ -164,7 +179,7 @@ export const App: React.FC = () => {
             path="/en/projects/:slug"
             element={
               <PublicLayout locale="en">
-                <ProjectDetailPage locale="en" projects={PUBLISHED_PROJECTS} />
+                <ProjectDetailPage locale="en" />
               </PublicLayout>
             }
           />

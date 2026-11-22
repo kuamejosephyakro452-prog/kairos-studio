@@ -126,15 +126,51 @@
   backdrop-filter: blur(14px);
 }
 
-/* Grain de film ultra-léger */
+/* Grain de film ultra-léger (desktop uniquement, sans mix-blend-mode coûteux en scroll) */
 .film-grain {
   pointer-events: none;
   position: fixed;
   inset: 0;
   z-index: 60;
-  opacity: 0.032;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  contain: strict;
+}
+@media (pointer: coarse) {
+  .film-grain {
+    display: none;
+  }
+}
+
+/* Animations d'entrée Hero en CSS pur (zéro dépendance JS bloquante avant le premier rendu) */
+@keyframes heroWordIn {
+  from {
+    transform: translate3d(0, 115%, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes heroStaggerIn {
+  from {
+    transform: translate3d(0, 26px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.hero-word-anim {
+  animation: heroWordIn 0.78s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 50ms) both;
+}
+
+.hero-stagger-anim {
+  animation: heroStaggerIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) calc(80ms + var(--i, 0) * 55ms) both;
 }
 
 /* Transitions de page fluides (sans transform persistant pour préserver position:fixed et position:sticky) */

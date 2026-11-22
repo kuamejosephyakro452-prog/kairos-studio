@@ -20,12 +20,29 @@ export const CustomCursor: React.FC = () => {
     let ry = -100;
     let rafId = 0;
 
+    const animate = () => {
+      rafId = 0;
+      rx += (mx - rx) * 0.18;
+      ry += (my - ry) * 0.18;
+      if (ringRef.current) {
+        ringRef.current.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+      }
+      if (Math.abs(mx - rx) > 0.25 || Math.abs(my - ry) > 0.25) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+
+    const startLoop = () => {
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    };
+
     const onMove = (e: MouseEvent) => {
       mx = e.clientX;
       my = e.clientY;
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
       }
+      startLoop();
     };
 
     const onOver = (e: MouseEvent) => {
@@ -49,18 +66,8 @@ export const CustomCursor: React.FC = () => {
       }
     };
 
-    const animate = () => {
-      rx += (mx - rx) * 0.16;
-      ry += (my - ry) * 0.16;
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
-      }
-      rafId = requestAnimationFrame(animate);
-    };
-
     window.addEventListener('mousemove', onMove, { passive: true });
     document.addEventListener('mouseover', onOver, { passive: true });
-    rafId = requestAnimationFrame(animate);
 
     return () => {
       cancelAnimationFrame(rafId);

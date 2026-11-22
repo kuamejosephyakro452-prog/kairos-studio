@@ -1,23 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Maximize2, X } from 'lucide-react';
+import { PUBLISHED_PROJECTS } from '@/content/projects';
 import { DICTIONARY } from '@/i18n/translations';
 import { resolveAssetUrl } from '@/lib/media';
 import { ResponsivePicture } from '@/components/ResponsivePicture';
 import { SeoHead } from '@/components/SeoHead';
 import { Magnetic } from '@/components/Magnetic';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import type { Locale, Project } from '@/types/portfolio';
+import type { Locale } from '@/types/portfolio';
 
 interface ProjectDetailPageProps {
   locale: Locale;
-  projects: Project[];
 }
 
-export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({
-  locale,
-  projects,
-}) => {
+export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ locale }) => {
+  const projects = PUBLISHED_PROJECTS;
   const { slug } = useParams<{ slug: string }>();
   const t = DICTIONARY[locale];
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);

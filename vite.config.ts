@@ -21,9 +21,20 @@ export default defineConfig(({ mode }) => {
       cssCodeSplit: true,
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-            motion: ['gsap', 'lenis'],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (
+                id.includes('react-dom') ||
+                id.includes('react-router') ||
+                id.includes('scheduler') ||
+                /[\\/]node_modules[\\/]react[\\/]/.test(id)
+              ) {
+                return 'vendor';
+              }
+              if (id.includes('gsap') || id.includes('lenis')) {
+                return 'motion';
+              }
+            }
           },
         },
       },

@@ -182,29 +182,63 @@ export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ className = '' }
       window.addEventListener('resize', resize, { passive: true });
       window.addEventListener('mousemove', onMove, { passive: true });
 
+      const cfg = SHADER_COLORS;
+      gl.uniform3fv(uBg, cfg.bg);
+      gl.uniform3fv(uC1, cfg.c1);
+      gl.uniform3fv(uC2, cfg.c2);
+      gl.uniform3fv(uC3, cfg.c3);
+      gl.uniform1f(uIntensity, cfg.intensity);
+
+      let isVisible = true;
+      let isTabVisible = !document.hidden;
+      const io =
+        typeof IntersectionObserver !== 'undefined'
+          ? new IntersectionObserver(
+              ([entry]) => {
+                isVisible = entry.isIntersecting;
+                if (isVisible && isTabVisible && !rafId && !disposed) {
+                  rafId = requestAnimationFrame(render);
+                }
+              },
+              { threshold: 0.01 }
+            )
+          : null;
+      io?.observe(canvas);
+
+      const onVisibilityChange = () => {
+        isTabVisible = !document.hidden;
+        if (isVisible && isTabVisible && !rafId && !disposed) {
+          rafId = requestAnimationFrame(render);
+        }
+      };
+      document.addEventListener('visibilitychange', onVisibilityChange);
+
       const start = performance.now();
+      let lastDraw = 0;
+      const FRAME_MS = 1000 / 30; // 30 fps fluides pour un mouvement lent, divise par 2 la charge GPU
+
       const render = (now: number) => {
-        if (disposed) return;
-        mouse.x += (mouse.tx - mouse.x) * 0.055;
-        mouse.y += (mouse.ty - mouse.y) * 0.055;
+        rafId = 0;
+        if (disposed || !isVisible || !isTabVisible) return;
+        if (now - lastDraw >= FRAME_MS) {
+          lastDraw = now;
+          mouse.x += (mouse.tx - mouse.x) * 0.08;
+          mouse.y += (mouse.ty - mouse.y) * 0.08;
 
-        const cfg = SHADER_COLORS;
-        gl.uniform2f(uRes, canvas.width, canvas.height);
-        gl.uniform1f(uTime, (now - start) * 0.001);
-        gl.uniform2f(uMouse, mouse.x, mouse.y);
-        gl.uniform3fv(uBg, cfg.bg);
-        gl.uniform3fv(uC1, cfg.c1);
-        gl.uniform3fv(uC2, cfg.c2);
-        gl.uniform3fv(uC3, cfg.c3);
-        gl.uniform1f(uIntensity, cfg.intensity);
+          gl.uniform2f(uRes, canvas.width, canvas.height);
+          gl.uniform1f(uTime, (now - start) * 0.001);
+          gl.uniform2f(uMouse, mouse.x, mouse.y);
 
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
         rafId = requestAnimationFrame(render);
       };
       rafId = requestAnimationFrame(render);
 
       cleanup = () => {
         cancelAnimationFrame(rafId);
+        io?.disconnect();
+        document.removeEventListener('visibilitychange', onVisibilityChange);
         window.removeEventListener('resize', resize);
         window.removeEventListener('mousemove', onMove);
         gl.deleteProgram(prog);
