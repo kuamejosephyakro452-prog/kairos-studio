@@ -48,10 +48,17 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
   canonicalPath,
   alternateFrPath,
   alternateEnPath,
-  ogImage = `${SITE_URL}/media/images/og-preview-kairos.jpg`,
+  ogImage,
   noindex = false,
   jsonLd,
 }) => {
+  const defaultOgImage = `${SITE_URL}/media/images/${locale === 'en' ? 'affiche-apercu-en-v1.jpg' : 'affiche-apercu-fr-v1.jpg'}`;
+  const resolvedOgImage = ogImage || defaultOgImage;
+  const resolvedOgAlt =
+    locale === 'en'
+      ? 'KAIROS STUDIO — Turning Ideas Into Experiences. Creative & digital studio: Graphic Design, Audiovisual Production, Digital Communication, Digital Solutions / ICT, Web Creation.'
+      : 'KAIROS STUDIO — Turning Ideas Into Experiences. Studio créatif et numérique : Design graphique, Production audiovisuelle, Communication digitale, Solutions numériques / TIC, Création de sites web.';
+
   useEffect(() => {
     document.documentElement.lang = locale;
     document.title = title;
@@ -75,14 +82,20 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
     upsertMeta('property', 'og:title', title);
     upsertMeta('property', 'og:description', description);
     upsertMeta('property', 'og:url', canonicalUrl);
-    upsertMeta('property', 'og:image', ogImage);
-    upsertMeta('property', 'og:image:secure_url', ogImage);
-    upsertMeta('property', 'og:image:alt', 'KAIROS STUDIO — Turning Ideas Into Experiences');
+    upsertMeta('property', 'og:image', resolvedOgImage);
+    upsertMeta('property', 'og:image:secure_url', resolvedOgImage);
+    if (!ogImage) {
+      upsertMeta('property', 'og:image:type', 'image/jpeg');
+      upsertMeta('property', 'og:image:width', '1200');
+      upsertMeta('property', 'og:image:height', '630');
+    }
+    upsertMeta('property', 'og:image:alt', resolvedOgAlt);
     upsertMeta('property', 'og:locale', locale === 'fr' ? 'fr_FR' : 'en_US');
     upsertMeta('name', 'twitter:card', 'summary_large_image');
     upsertMeta('name', 'twitter:title', title);
     upsertMeta('name', 'twitter:description', description);
-    upsertMeta('name', 'twitter:image', ogImage);
+    upsertMeta('name', 'twitter:image', resolvedOgImage);
+    upsertMeta('name', 'twitter:image:alt', resolvedOgAlt);
 
     // JSON-LD structuré
     const scriptId = 'kairos-jsonld';
@@ -98,7 +111,7 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
     } else if (scriptEl) {
       scriptEl.remove();
     }
-  }, [title, description, locale, canonicalPath, alternateFrPath, alternateEnPath, ogImage, noindex, jsonLd]);
+  }, [title, description, locale, canonicalPath, alternateFrPath, alternateEnPath, ogImage, resolvedOgImage, resolvedOgAlt, noindex, jsonLd]);
 
   return null;
 };

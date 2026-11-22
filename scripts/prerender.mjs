@@ -57,9 +57,14 @@ function buildHtml(template, route) {
   html = html.replace(/href="\.\/favicon\.svg"/g, `href="${BASE_PATH}favicon.svg"`);
 
   const canonicalUrl = `${SITE_URL}${route.path}`;
-  const defaultOgImage = `${SITE_URL}/media/images/og-preview-kairos.jpg`;
+  const isEn = route.lang === 'en';
+  const defaultOgImage = `${SITE_URL}/media/images/${isEn ? 'affiche-apercu-en-v1.jpg' : 'affiche-apercu-fr-v1.jpg'}`;
+  const defaultOgAlt = isEn
+    ? 'KAIROS STUDIO — Turning Ideas Into Experiences. Creative & digital studio: Graphic Design, Audiovisual Production, Digital Communication, Digital Solutions / ICT, Web Creation.'
+    : 'KAIROS STUDIO — Turning Ideas Into Experiences. Studio créatif et numérique : Design graphique, Production audiovisuelle, Communication digitale, Solutions numériques / TIC, Création de sites web.';
   const ogImage = route.ogImage || defaultOgImage;
   const isDefaultOg = ogImage === defaultOgImage;
+  const ogAlt = route.ogAlt || defaultOgAlt;
 
   const headInject = [
     `<meta name="robots" content="${route.noindex ? 'noindex, nofollow' : 'index, follow'}" />`,
@@ -77,12 +82,13 @@ function buildHtml(template, route) {
     isDefaultOg ? `<meta property="og:image:type" content="image/jpeg" />` : '',
     isDefaultOg ? `<meta property="og:image:width" content="1200" />` : '',
     isDefaultOg ? `<meta property="og:image:height" content="630" />` : '',
-    `<meta property="og:image:alt" content="KAIROS STUDIO — Turning Ideas Into Experiences" />`,
+    `<meta property="og:image:alt" content="${escapeHtml(ogAlt)}" />`,
     `<meta property="og:locale" content="${route.lang === 'fr' ? 'fr_FR' : 'en_US'}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(route.title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(route.description)}" />`,
     `<meta name="twitter:image" content="${escapeHtml(ogImage)}" />`,
+    `<meta name="twitter:image:alt" content="${escapeHtml(ogAlt)}" />`,
     route.jsonLd
       ? `<script id="kairos-jsonld" type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>`
       : '',
