@@ -28,7 +28,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
         duration: 0.95,
         stagger: 0.065,
         ease: 'power4.out',
-        delay: 0.12,
       });
       gsap.from('.hero-stagger', {
         y: 26,
@@ -36,7 +35,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
         duration: 0.8,
         stagger: 0.09,
         ease: 'power3.out',
-        delay: 0.35,
+        delay: 0.18,
       });
     }, heroRef);
 

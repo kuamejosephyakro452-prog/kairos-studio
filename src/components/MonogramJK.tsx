@@ -3,7 +3,6 @@ import React from 'react';
 interface MonogramJKProps {
   className?: string;
   size?: number;
-  animated?: boolean;
   showFrame?: boolean;
   label?: string;
 }
@@ -11,7 +10,6 @@ interface MonogramJKProps {
 export const MonogramJK: React.FC<MonogramJKProps> = ({
   className = '',
   size = 44,
-  animated = false,
   showFrame = true,
   label = 'JK — Joseph Kouamé, KAIROS STUDIO',
 }) => {
@@ -46,7 +44,6 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
           stroke={`url(#${gradId})`}
           strokeWidth="1.5"
           strokeOpacity="0.8"
-          className={animated ? 'jk-stroke jk-frame' : undefined}
         />
       )}
 
@@ -57,14 +54,12 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
         strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={animated ? 'jk-stroke jk-j' : undefined}
       />
       <path
         d="M25 19H37"
         stroke={`url(#${gradId})`}
         strokeWidth="2.2"
         strokeLinecap="round"
-        className={animated ? 'jk-stroke jk-serif' : undefined}
       />
 
       {/* Lettre K dynamique */}
@@ -73,7 +68,6 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
         stroke={`url(#${gradId})`}
         strokeWidth="3"
         strokeLinecap="round"
-        className={animated ? 'jk-stroke jk-k1' : undefined}
       />
       <path
         d="M64 19L45 40.2L65 59"
@@ -81,7 +75,6 @@ export const MonogramJK: React.FC<MonogramJKProps> = ({
         strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={animated ? 'jk-stroke jk-k2' : undefined}
       />
     </svg>
   );

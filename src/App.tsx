@@ -8,10 +8,8 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { PUBLISHED_PROJECTS } from '@/content/projects';
-import { DICTIONARY } from '@/i18n/translations';
 import { SmoothScrollProvider } from '@/components/SmoothScrollProvider';
 import { CustomCursor } from '@/components/CustomCursor';
-import { Preloader } from '@/components/Preloader';
 import { FullscreenNav } from '@/components/FullscreenNav';
 import { Footer } from '@/components/Footer';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
@@ -75,7 +73,6 @@ const PublicLayout: React.FC<{
     <SmoothScrollProvider>
       <div className="film-grain" aria-hidden="true" />
       <CustomCursor />
-      <Preloader caption={DICTIONARY[locale].preloader.caption} />
       <FullscreenNav locale={locale} onSwitchLocale={handleSwitchLocale} />
       <div key={location.pathname} className="page-transition">
         {children}

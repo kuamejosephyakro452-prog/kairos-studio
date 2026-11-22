@@ -37,9 +37,6 @@ export interface SiteDictionary {
     skipToContent: string;
     directAccess: string;
   };
-  preloader: {
-    caption: string;
-  };
   hero: {
     badge: string;
     headlineLine1: string;
@@ -203,9 +200,6 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       close: 'Fermer',
       skipToContent: 'Aller au contenu principal',
       directAccess: 'Échange direct',
-    },
-    preloader: {
-      caption: 'Turning Ideas Into Experiences.',
     },
     hero: {
       badge: 'Studio créatif & numérique · Joseph Kouamé',
@@ -560,9 +554,6 @@ export const DICTIONARY: Record<Locale, SiteDictionary> = {
       close: 'Close',
       skipToContent: 'Skip to main content',
       directAccess: 'Direct inquiry',
-    },
-    preloader: {
-      caption: 'Turning Ideas Into Experiences.',
     },
     hero: {
       badge: 'Creative & Digital Studio · Joseph Kouamé',
