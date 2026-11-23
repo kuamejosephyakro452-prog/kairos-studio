@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
 import {
+  saveWorksReturnState,
+  type WorksReturnState,
+  type WorksViewMode,
+} from '@/lib/scrollControl';
+import {
   ALL_CATEGORIES,
   type Locale,
   type Project,
@@ -28,9 +33,11 @@ interface WorksShowcaseProps {
   projects: Project[];
   activeCategory: ProjectCategory | 'all';
   onChangeCategory: (cat: ProjectCategory | 'all') => void;
+  initialReturnState?: WorksReturnState | null;
+  onReadyForRestore?: () => void;
 }
 
-type ViewMode = 'gallery' | 'list' | 'explore';
+type ViewMode = WorksViewMode;
 
 /**
  * Coordonnées organiques façon table lumineuse pour la vue "Explorer" (canevas libre glissable).
@@ -54,22 +61,30 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
   projects,
   activeCategory,
   onChangeCategory,
+  initialReturnState,
+  onReadyForRestore,
 }) => {
   const t = DICTIONARY[locale];
-  const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => initialReturnState?.viewMode ?? 'gallery'
+  );
 
   // Refs pour Sticky Horizontal ScrollTrigger (desktop, sans pin:true pour compatibilité React 19 totale)
   const runwayRef = useRef<HTMLDivElement>(null);
   const stickyViewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [runwayHeight, setRunwayHeight] = useState<number | null>(null);
+  const restoreFiredRef = useRef(false);
+  const skipInitialFlipRef = useRef(Boolean(initialReturnState));
 
   // État pour la traînée d'images au survol en mode Index (desktop)
   const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
   // État pour le canevas glissable en mode Explorer
-  const [canvasOffset, setCanvasOffset] = useState({ x: -30, y: -10 });
+  const [canvasOffset, setCanvasOffset] = useState(
+    () => initialReturnState?.canvasOffset ?? { x: -30, y: -10 }
+  );
   const dragStateRef = useRef({ active: false, startX: 0, startY: 0, origX: 0, origY: 0, moved: false });
 
   const filtered =
@@ -78,6 +93,17 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
       : projects.filter((p) => p.category === activeCategory);
 
   const projectPrefix = locale === 'fr' ? '/fr/projets' : '/en/projects';
+
+  // Mémorise l'état exact (scrollY, filtre, mode d'affichage, position Explorer) avant d'ouvrir une fiche projet
+  const handleRememberState = (slug: string) => {
+    saveWorksReturnState({
+      scrollY: window.scrollY,
+      activeCategory,
+      viewMode,
+      canvasOffset,
+      slug,
+    });
+  };
 
   // Défilement horizontal fluide sur desktop en mode Galerie via CSS position:sticky + GSAP ScrollTrigger scrub
   useLayoutEffect(() => {
@@ -152,8 +178,41 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
     return () => mm.revert();
   }, [viewMode, filtered.length, activeCategory, projects.length]);
 
+  // Restaure la position exacte de scroll dès que la hauteur du mode courant (notamment runwayHeight en Galerie desktop) est stabilisée
+  useEffect(() => {
+    if (!initialReturnState || !onReadyForRestore || restoreFiredRef.current) return;
+
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+    const reduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const expectsRunway =
+      viewMode === 'gallery' && isDesktop && !reduced && filtered.length > 2;
+
+    if (expectsRunway && runwayHeight === null) return;
+
+    restoreFiredRef.current = true;
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+        onReadyForRestore();
+        ScrollTrigger.update();
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [initialReturnState, onReadyForRestore, runwayHeight, viewMode, filtered.length]);
+
   // Animation FLIP-like d'entrée fluide lors du changement de filtre ou de mode
   useEffect(() => {
+    if (skipInitialFlipRef.current) {
+      skipInitialFlipRef.current = false;
+      return;
+    }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const cards = document.querySelectorAll('.work-flip-item');
     if (cards.length === 0) return;
@@ -194,6 +253,7 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
 
   // Interactions drag-to-pan pour le canevas Explorer (souris & tactile)
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragStateRef.current.moved = false;
     if ((e.target as HTMLElement).closest('a, button')) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragStateRef.current = {
@@ -219,6 +279,9 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
 
   const onPointerUp = () => {
     dragStateRef.current.active = false;
+    window.setTimeout(() => {
+      dragStateRef.current.moved = false;
+    }, 0);
   };
 
   const nudgeTrack = (dir: -1 | 1) => {
@@ -407,6 +470,7 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
                   >
                     <Link
                       to={`${projectPrefix}/${project.slug}`}
+                      onClick={() => handleRememberState(project.slug)}
                       data-cursor={
                         isVideo
                           ? locale === 'fr'
@@ -502,6 +566,7 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
                 <Link
                   key={project.id}
                   to={`${projectPrefix}/${project.slug}`}
+                  onClick={() => handleRememberState(project.slug)}
                   onMouseEnter={(e) => {
                     setHoveredProject(project);
                     positionPreview(e.clientX, e.clientY, true);
@@ -587,7 +652,11 @@ export const WorksShowcase: React.FC<WorksShowcaseProps> = ({
                     key={project.id}
                     to={`${projectPrefix}/${project.slug}`}
                     onClick={(e) => {
-                      if (dragStateRef.current.moved) e.preventDefault();
+                      if (dragStateRef.current.moved) {
+                        e.preventDefault();
+                        return;
+                      }
+                      handleRememberState(project.slug);
                     }}
                     data-cursor={locale === 'fr' ? 'VOIR' : 'VIEW'}
                     className="group absolute block overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-2.5 shadow-[var(--shadow-elevated)] transition-transform duration-300 hover:z-30 hover:scale-[1.04] hover:border-[var(--accent-1)]"

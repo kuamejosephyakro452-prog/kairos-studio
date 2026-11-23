@@ -1,11 +1,27 @@
 import React, { useEffect } from 'react';
+import { registerLenis } from '@/lib/scrollControl';
 
 export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // Empêche le navigateur de forcer une restauration de scroll avant le montage des sections
+    // paresseuses (HomeBelowFold / galerie horizontale) qui renvoyait l'utilisateur en bas de page.
+    let prevScrollRestoration: History['scrollRestoration'] | null = null;
+    if ('scrollRestoration' in window.history) {
+      prevScrollRestoration = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
+    }
+
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const coarse = window.matchMedia('(pointer: coarse)').matches;
-    if (reduced || coarse) return;
+    if (reduced || coarse) {
+      return () => {
+        if (prevScrollRestoration && 'scrollRestoration' in window.history) {
+          window.history.scrollRestoration = prevScrollRestoration;
+        }
+      };
+    }
 
     let cancelled = false;
     let cleanup: (() => void) | null = null;
@@ -27,6 +43,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
         touchMultiplier: 1.5,
       });
 
+      registerLenis(lenis);
       lenis.on('scroll', ScrollTrigger.update);
 
       const tick = (time: number) => {
@@ -36,6 +53,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       gsap.ticker.lagSmoothing(0);
 
       cleanup = () => {
+        registerLenis(null);
         gsap.ticker.remove(tick);
         lenis.destroy();
       };
@@ -49,6 +67,9 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       cancelled = true;
       window.clearTimeout(timer);
       cleanup?.();
+      if (prevScrollRestoration && 'scrollRestoration' in window.history) {
+        window.history.scrollRestoration = prevScrollRestoration;
+      }
     };
   }, []);
 

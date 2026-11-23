@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Maximize2, X } from 
 import { PUBLISHED_PROJECTS } from '@/content/projects';
 import { DICTIONARY } from '@/i18n/translations';
 import { resolveAssetUrl } from '@/lib/media';
+import { peekWorksReturnState, scrollToY } from '@/lib/scrollControl';
 import { ResponsivePicture } from '@/components/ResponsivePicture';
 import { SeoHead } from '@/components/SeoHead';
 import { Magnetic } from '@/components/Magnetic';
@@ -25,7 +26,7 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ locale }) 
   const projectPrefix = locale === 'fr' ? '/fr/projets' : '/en/projects';
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    scrollToY(0, { immediate: true });
     setLightboxIdx(null);
   }, [slug]);
 
@@ -94,13 +95,19 @@ export const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ locale }) 
 
           <div className="relative z-10 mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <Link
-                to={`/${locale}#works`}
-                className="font-mono-tech inline-flex items-center gap-2.5 text-xs font-semibold tracking-[0.2em] uppercase text-[var(--accent-text)] transition-opacity hover:opacity-75"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>{t.projectDetail.backToWorks}</span>
-              </Link>
+              {(() => {
+                const hasSavedReturn = Boolean(peekWorksReturnState());
+                return (
+                  <Link
+                    to={hasSavedReturn ? `/${locale}` : `/${locale}#works`}
+                    state={hasSavedReturn ? { restoreWorksState: true } : undefined}
+                    className="font-mono-tech inline-flex items-center gap-2.5 text-xs font-semibold tracking-[0.2em] uppercase text-[var(--accent-text)] transition-opacity hover:opacity-75"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>{t.projectDetail.backToWorks}</span>
+                  </Link>
+                );
+              })()}
 
               <span className="font-mono-tech text-[11px] tracking-[0.22em] uppercase text-[var(--text-muted)]">
                 {t.projectDetail.caseStudyLabel} · {String(projectIndex + 1).padStart(2, '0')}

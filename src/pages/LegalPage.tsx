@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
 import { SeoHead } from '@/components/SeoHead';
+import { scrollToY } from '@/lib/scrollControl';
 import type { Locale } from '@/types/portfolio';
 
 interface LegalPageProps {
@@ -14,7 +15,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ locale, kind }) => {
   const t = DICTIONARY[locale];
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    scrollToY(0, { immediate: true });
   }, [kind, locale]);
 
   const title = kind === 'legal' ? t.legal.legalNoticeTitle : t.legal.privacyTitle;

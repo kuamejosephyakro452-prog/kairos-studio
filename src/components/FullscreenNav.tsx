@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ArrowUpRight, Mail, MessageCircle, X } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
+import { clearWorksReturnState, scrollToElement, scrollToY } from '@/lib/scrollControl';
 import type { Locale } from '@/types/portfolio';
 import { MonogramJK } from './MonogramJK';
 import { Magnetic } from './Magnetic';
@@ -67,10 +68,11 @@ export const FullscreenNav: React.FC<FullscreenNavProps> = ({ locale, onSwitchLo
 
   const jumpTo = (sectionId: string) => {
     setMenuOpen(false);
+    clearWorksReturnState();
     if (isHome) {
       const target = document.getElementById(sectionId);
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollToElement(target, { immediate: false });
         return;
       }
     }
@@ -105,6 +107,10 @@ export const FullscreenNav: React.FC<FullscreenNavProps> = ({ locale, onSwitchLo
           {/* Marque + Monogramme JK */}
           <Link
             to={homePath}
+            onClick={() => {
+              clearWorksReturnState();
+              if (isHome) scrollToY(0, { immediate: false });
+            }}
             aria-label={locale === 'fr' ? 'KAIROS STUDIO — Accueil' : 'KAIROS STUDIO — Home'}
             className="group flex items-center gap-3 text-[var(--text-primary)]"
           >

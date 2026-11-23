@@ -6,18 +6,23 @@ import { WorksShowcase } from '@/components/WorksShowcase';
 import { FounderStage } from '@/components/FounderStage';
 import { KineticMarquee } from '@/components/KineticMarquee';
 import { ContactSection } from '@/components/ContactSection';
+import type { WorksReturnState } from '@/lib/scrollControl';
 import type { Locale, ProjectCategory } from '@/types/portfolio';
 
 interface HomeBelowFoldProps {
   locale: Locale;
   activeCategory: ProjectCategory | 'all';
   onChangeCategory: (cat: ProjectCategory | 'all') => void;
+  initialReturnState?: WorksReturnState | null;
+  onReadyForRestore?: () => void;
 }
 
 export const HomeBelowFold: React.FC<HomeBelowFoldProps> = ({
   locale,
   activeCategory,
   onChangeCategory,
+  initialReturnState,
+  onReadyForRestore,
 }) => {
   return (
     <>
@@ -32,6 +37,8 @@ export const HomeBelowFold: React.FC<HomeBelowFoldProps> = ({
         projects={PUBLISHED_PROJECTS}
         activeCategory={activeCategory}
         onChangeCategory={onChangeCategory}
+        initialReturnState={initialReturnState}
+        onReadyForRestore={onReadyForRestore}
       />
       <FounderStage locale={locale} />
       <KineticMarquee locale={locale} />
