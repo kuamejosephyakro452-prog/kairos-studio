@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
+import { scrollToElement } from '@/lib/scrollControl';
 import type { Locale, Project, ProjectCategory } from '@/types/portfolio';
 import { ResponsivePicture } from './ResponsivePicture';
 import { Magnetic } from './Magnetic';
@@ -22,8 +23,10 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({
   onSelectCategory,
 }) => {
   const t = DICTIONARY[locale];
+  const sectionRef = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [slideTick, setSlideTick] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
   const activeService = t.services.items[activeIndex];
 
   // Associe à chaque discipline uniquement les projets réellement publiés (jamais de visuel supprimé en dur)
@@ -55,9 +58,24 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({
     setSlideTick(0);
   }, [activeIndex]);
 
-  // Fait défiler en douceur les créations publiées de la discipline active (si > 1 création)
+  // Observe la visibilité pour stopper le minuteur hors écran
   useEffect(() => {
-    if (activeSlides.length <= 1) return;
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  // Fait défiler en douceur les créations publiées de la discipline active uniquement quand visible
+  useEffect(() => {
+    if (!isVisible || activeSlides.length <= 1) return;
     if (
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -68,7 +86,7 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({
       setSlideTick((prev) => (prev + 1) % activeSlides.length);
     }, 4_500);
     return () => window.clearInterval(timer);
-  }, [activeSlides.length]);
+  }, [isVisible, activeSlides.length]);
 
   const currentProject =
     activeSlides.length > 0 ? activeSlides[slideTick % activeSlides.length] : null;
@@ -80,19 +98,23 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({
 
   const handleFilterAndScroll = (cat: ProjectCategory) => {
     onSelectCategory(cat);
-    document.getElementById('works')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = document.getElementById('works');
+    if (el) scrollToElement(el, { immediate: false });
   };
 
   return (
     <section
       id="services"
+      ref={sectionRef}
       className="relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-primary)] py-24 text-[var(--text-primary)] sm:py-36"
     >
-      {/* Halo ambiant qui change de couleur selon le domaine survolé */}
+      {/* Halo ambiant en radial-gradient pur (zéro blur-[130px] GPU) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-24 right-0 h-[36rem] w-[36rem] rounded-full opacity-25 blur-[130px] transition-colors duration-700"
-        style={{ backgroundColor: activeService.ambientColor }}
+        className="pointer-events-none absolute -top-24 right-0 h-[36rem] w-[36rem] rounded-full opacity-30 transition-opacity duration-500"
+        style={{
+          background: `radial-gradient(circle, ${activeService.ambientColor} 0%, transparent 68%)`,
+        }}
       />
 
       <div className="relative z-10 mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
@@ -218,55 +240,33 @@ export const ServicesStage: React.FC<ServicesStageProps> = ({
               </div>
 
               <div className="relative aspect-[4/4.3] overflow-hidden rounded-2xl bg-[#07070B]">
-                {t.services.items.map((srv, idx) => {
-                  const srvSlides = slidesByCategory.get(srv.id) ?? [];
-                  const srvProject =
-                    srvSlides.length > 0
-                      ? srvSlides[(idx === activeIndex ? slideTick : 0) % srvSlides.length]
-                      : null;
-
-                  return (
-                    <div
-                      key={srv.id}
-                      aria-hidden={idx !== activeIndex}
-                      className={`absolute inset-0 transition-all duration-700 ease-out ${
-                        idx === activeIndex
-                          ? 'scale-100 opacity-100'
-                          : 'pointer-events-none scale-105 opacity-0'
-                      }`}
-                      style={{
-                        clipPath:
-                          idx === activeIndex ? 'inset(0% 0% 0% 0%)' : 'inset(8% 0% 8% 0%)',
-                      }}
-                    >
-                      {srvProject ? (
-                        <ResponsivePicture
-                          key={srvProject.id}
-                          assetId={srvProject.cover_asset_id}
-                          fallbackUrl={srvProject.cover_image_url}
-                          alt={
-                            (locale === 'fr'
-                              ? srvProject.cover_image_alt_fr || srvProject.title_fr
-                              : srvProject.cover_image_alt_en || srvProject.title_en) || srv.title
-                          }
-                          sizes="(max-width: 1024px) 92vw, 40vw"
-                          className="h-full w-full"
-                          imgClassName="h-full w-full object-cover object-top transition-opacity duration-500"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[var(--bg-elevated)] font-mono-tech text-xs tracking-[0.2em] uppercase text-[var(--text-muted)]">
-                          KAIROS STUDIO
-                        </div>
-                      )}
-                      <div
-                        className="pointer-events-none absolute inset-0"
-                        style={{
-                          background: `linear-gradient(180deg, transparent 48%, rgba(7,7,11,0.85) 100%)`,
-                        }}
-                      />
+                <div key={currentProject?.id ?? activeService.id} className="absolute inset-0">
+                  {currentProject ? (
+                    <ResponsivePicture
+                      assetId={currentProject.cover_asset_id}
+                      fallbackUrl={currentProject.cover_image_url}
+                      alt={
+                        (locale === 'fr'
+                          ? currentProject.cover_image_alt_fr || currentProject.title_fr
+                          : currentProject.cover_image_alt_en || currentProject.title_en) ||
+                        activeService.title
+                      }
+                      sizes="(max-width: 1024px) 92vw, 40vw"
+                      className="h-full w-full"
+                      imgClassName="h-full w-full object-cover object-top"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-[var(--bg-elevated)] font-mono-tech text-xs tracking-[0.2em] uppercase text-[var(--text-muted)]">
+                      KAIROS STUDIO
                     </div>
-                  );
-                })}
+                  )}
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background: `linear-gradient(180deg, transparent 48%, rgba(7,7,11,0.85) 100%)`,
+                    }}
+                  />
+                </div>
 
                 {activeSlides.length > 1 && (
                   <div className="absolute top-4 right-4 left-4 z-10 flex items-center gap-1.5">

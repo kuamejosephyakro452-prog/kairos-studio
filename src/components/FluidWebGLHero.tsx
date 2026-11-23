@@ -28,8 +28,11 @@ export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ className = '' }
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // Sur très petit écran mobile, on s'appuie sur le mesh gradient CSS haute vitesse
-    if (window.innerWidth < 768) return;
+    // Sur mobile, mode économie de données ou CPU modeste, le mesh CSS suffit et reste 60 fps
+    if (window.innerWidth < 1024) return;
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    if (nav.connection?.saveData) return;
+    if (typeof nav.hardwareConcurrency === 'number' && nav.hardwareConcurrency <= 4) return;
 
     let rafId = 0;
     let disposed = false;
@@ -82,8 +85,8 @@ export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ className = '' }
 
         float fbm(vec2 p) {
           float v = 0.0;
-          float a = 0.52;
-          for (int i = 0; i < 4; i++) {
+          float a = 0.55;
+          for (int i = 0; i < 3; i++) {
             v += a * noise(p);
             p = p * 2.02 + vec2(1.7, 9.2);
             a *= 0.5;
@@ -168,9 +171,9 @@ export const FluidWebGLHero: React.FC<FluidWebGLHeroProps> = ({ className = '' }
 
       const mouse = { x: 0.65, y: 0.52, tx: 0.65, ty: 0.52 };
       const resize = () => {
-        const scale = 0.42; // Résolution fluide optimisée 60 fps
-        canvas.width = Math.max(320, Math.floor(canvas.clientWidth * scale));
-        canvas.height = Math.max(200, Math.floor(canvas.clientHeight * scale));
+        const scale = 0.26; // Résolution douce upscalée — divise la charge GPU par ~3
+        canvas.width = Math.max(240, Math.floor(canvas.clientWidth * scale));
+        canvas.height = Math.max(150, Math.floor(canvas.clientHeight * scale));
         gl.viewport(0, 0, canvas.width, canvas.height);
       };
       resize();

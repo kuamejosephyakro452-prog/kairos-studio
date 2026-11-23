@@ -119,27 +119,16 @@
   opacity: 0.55;
 }
 
-/* Surface verre */
+/* Surface carte légère (sans backdrop-filter coûteux en scroll GPU) */
 .glass-panel {
-  background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
   border: 1px solid var(--border-subtle);
-  backdrop-filter: blur(14px);
 }
 
-/* Grain de film ultra-léger (desktop uniquement, sans mix-blend-mode coûteux en scroll) */
-.film-grain {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  contain: strict;
-}
-@media (pointer: coarse) {
-  .film-grain {
-    display: none;
-  }
+/* Saute le layout/paint des sections hors écran pour accélérer le chargement et le défilement */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 850px;
 }
 
 /* Animations d'entrée Hero en CSS pur (zéro dépendance JS bloquante avant le premier rendu) */

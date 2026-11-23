@@ -17,7 +17,8 @@ export const FullscreenNav: React.FC<FullscreenNavProps> = ({ locale, onSwitchLo
   const t = DICTIONARY[locale];
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const scrolledRef = useRef(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -26,15 +27,30 @@ export const FullscreenNav: React.FC<FullscreenNavProps> = ({ locale, onSwitchLo
   const isHome = location.pathname === homePath || location.pathname === `${homePath}/`;
 
   useEffect(() => {
-    const onScroll = () => {
+    let rafId = 0;
+    const update = () => {
+      rafId = 0;
       const y = window.scrollY;
-      setScrolled(y > 30);
-      const docH = document.documentElement.scrollHeight - window.innerHeight;
-      setProgress(docH > 0 ? Math.min(100, Math.max(0, (y / docH) * 100)) : 0);
+      const nextScrolled = y > 30;
+      if (nextScrolled !== scrolledRef.current) {
+        scrolledRef.current = nextScrolled;
+        setScrolled(nextScrolled);
+      }
+      if (progressBarRef.current) {
+        const docH = document.documentElement.scrollHeight - window.innerHeight;
+        const ratio = docH > 0 ? Math.min(1, Math.max(0, y / docH)) : 0;
+        progressBarRef.current.style.transform = `scaleX(${ratio})`;
+      }
     };
-    onScroll();
+    const onScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [location.pathname]);
 
   useEffect(() => {
@@ -85,21 +101,22 @@ export const FullscreenNav: React.FC<FullscreenNavProps> = ({ locale, onSwitchLo
         {t.nav.skipToContent}
       </a>
 
-      {/* Barre de progression de lecture ultra-fine */}
+      {/* Barre de progression de lecture ultra-fine (GPU scaleX, zéro re-render React) */}
       <div
         aria-hidden="true"
         className="fixed inset-x-0 top-0 z-[70] h-[2.5px] bg-transparent"
       >
         <div
-          className="bg-accent-gradient h-full transition-[width] duration-75"
-          style={{ width: `${progress}%` }}
+          ref={progressBarRef}
+          className="bg-accent-gradient h-full w-full origin-left will-change-transform"
+          style={{ transform: 'scaleX(0)' }}
         />
       </div>
 
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-[padding] duration-300 ${
           scrolled
-            ? 'border-b border-[var(--border-subtle)] bg-[var(--bg-primary)]/95 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl'
+            ? 'border-b border-[var(--border-subtle)] bg-[var(--bg-primary)]/97 py-3.5 shadow-[0_8px_24px_rgba(0,0,0,0.08)]'
             : 'bg-transparent py-5'
         }`}
       >

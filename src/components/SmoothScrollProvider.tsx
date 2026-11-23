@@ -15,7 +15,11 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const coarse = window.matchMedia('(pointer: coarse)').matches;
-    if (reduced || coarse) {
+    const lowCores =
+      typeof navigator !== 'undefined' &&
+      typeof navigator.hardwareConcurrency === 'number' &&
+      navigator.hardwareConcurrency <= 4;
+    if (reduced || coarse || lowCores) {
       return () => {
         if (prevScrollRestoration && 'scrollRestoration' in window.history) {
           window.history.scrollRestoration = prevScrollRestoration;
@@ -26,7 +30,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
     let cancelled = false;
     let cleanup: (() => void) | null = null;
 
-    // Charge Lenis + ScrollTrigger en différé (desktop uniquement) pour ne pas bloquer le premier rendu
+    // Charge Lenis + ScrollTrigger en différé (desktop puissant uniquement) avec inertie vive et réactive
     const init = async () => {
       const [{ default: Lenis }, { default: gsap }, { ScrollTrigger }] = await Promise.all([
         import('lenis'),
@@ -37,10 +41,11 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       gsap.registerPlugin(ScrollTrigger);
       const lenis = new Lenis({
-        duration: 1.05,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        duration: 0.65,
+        easing: (t) => 1 - Math.pow(1 - t, 3),
         smoothWheel: true,
-        touchMultiplier: 1.5,
+        wheelMultiplier: 1.08,
+        touchMultiplier: 1.4,
       });
 
       registerLenis(lenis);

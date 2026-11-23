@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { MonogramJK } from './MonogramJK';
 
 interface InteractiveMonogramJKProps {
@@ -7,59 +7,106 @@ interface InteractiveMonogramJKProps {
 }
 
 /**
- * Objet signature JK réactif au curseur :
- * Parallaxe 3D multicouche, anneaux orbitaux, coordonnées live et halo lumineux adaptatif.
+ * Objet signature JK réactif au curseur (zéro re-render React par frame) :
+ * Parallaxe 3D pilotée directement par refs DOM + mise en veille automatique hors écran ou à l'arrêt.
  */
 export const InteractiveMonogramJK: React.FC<InteractiveMonogramJKProps> = ({
   caption,
   size = 'hero',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const coordRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
+    const container = containerRef.current;
+    if (!container) return;
+
     let rafId = 0;
-    const target = { rx: 0, ry: 0, gx: 50, gy: 50 };
-    const current = { rx: 0, ry: 0, gx: 50, gy: 50 };
+    let isVisible = true;
+    const target = { rx: 0, ry: 0, gx: 0, gy: 0 };
+    const current = { rx: 0, ry: 0, gx: 0, gy: 0 };
+
+    const applyDom = () => {
+      if (sceneRef.current) {
+        sceneRef.current.style.transform = `rotateX(${current.rx.toFixed(2)}deg) rotateY(${current.ry.toFixed(2)}deg)`;
+      }
+      if (glowRef.current) {
+        glowRef.current.style.transform = `translate3d(${current.gx.toFixed(1)}px, ${current.gy.toFixed(1)}px, 0)`;
+      }
+      if (coordRef.current) {
+        coordRef.current.textContent = `X:${Math.round(current.ry).toString().padStart(2, '0')} Y:${Math.round(current.rx).toString().padStart(2, '0')}`;
+      }
+    };
+
+    const tick = () => {
+      rafId = 0;
+      if (!isVisible) return;
+
+      current.rx += (target.rx - current.rx) * 0.1;
+      current.ry += (target.ry - current.ry) * 0.1;
+      current.gx += (target.gx - current.gx) * 0.1;
+      current.gy += (target.gy - current.gy) * 0.1;
+
+      applyDom();
+
+      const stillMoving =
+        Math.abs(target.rx - current.rx) > 0.04 ||
+        Math.abs(target.ry - current.ry) > 0.04 ||
+        Math.abs(target.gx - current.gx) > 0.2 ||
+        Math.abs(target.gy - current.gy) > 0.2;
+
+      if (stillMoving) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    const wake = () => {
+      if (!rafId && isVisible) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
 
     const onMove = (e: MouseEvent) => {
-      const el = containerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
+      if (!isVisible) return;
+      const rect = container.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const dx = Math.max(-1, Math.min(1, (e.clientX - cx) / (window.innerWidth * 0.45)));
       const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / (window.innerHeight * 0.45)));
-      target.ry = dx * 18;
-      target.rx = -dy * 16;
-      target.gx = 50 + dx * 35;
-      target.gy = 50 + dy * 35;
+      target.ry = dx * 16;
+      target.rx = -dy * 14;
+      target.gx = dx * 26;
+      target.gy = dy * 26;
+      wake();
     };
 
-    const tick = () => {
-      current.rx += (target.rx - current.rx) * 0.08;
-      current.ry += (target.ry - current.ry) * 0.08;
-      current.gx += (target.gx - current.gx) * 0.08;
-      current.gy += (target.gy - current.gy) * 0.08;
-      setTilt({
-        rx: Number(current.rx.toFixed(2)),
-        ry: Number(current.ry.toFixed(2)),
-        gx: Number(current.gx.toFixed(1)),
-        gy: Number(current.gy.toFixed(1)),
-      });
-      rafId = requestAnimationFrame(tick);
-    };
+    const io =
+      typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            ([entry]) => {
+              isVisible = entry.isIntersecting;
+              if (!isVisible && rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = 0;
+              }
+            },
+            { threshold: 0.01 }
+          )
+        : null;
+    io?.observe(container);
 
     window.addEventListener('mousemove', onMove, { passive: true });
-    rafId = requestAnimationFrame(tick);
 
     return () => {
       window.removeEventListener('mousemove', onMove);
-      cancelAnimationFrame(rafId);
+      io?.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -74,22 +121,22 @@ export const InteractiveMonogramJK: React.FC<InteractiveMonogramJKProps> = ({
         className={`relative flex items-center justify-center ${dimClass}`}
         style={{ perspective: '1000px' }}
       >
-        {/* Halo chromatique qui suit le curseur */}
+        {/* Halo chromatique léger déplacé par GPU transform (sans blur-3xl coûteux) */}
         <div
+          ref={glowRef}
           aria-hidden="true"
-          className="pointer-events-none absolute -inset-6 rounded-full opacity-75 blur-3xl transition-opacity duration-500"
+          className="pointer-events-none absolute -inset-8 rounded-full opacity-75 will-change-transform"
           style={{
-            background: `radial-gradient(circle at ${tilt.gx}% ${tilt.gy}%, var(--glow-primary), var(--glow-secondary) 45%, transparent 72%)`,
+            background:
+              'radial-gradient(circle, var(--glow-primary) 0%, var(--glow-secondary) 40%, transparent 70%)',
           }}
         />
 
         {/* Scène 3D inclinable */}
         <div
+          ref={sceneRef}
           className="relative flex h-full w-full items-center justify-center will-change-transform"
-          style={{
-            transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-            transformStyle: 'preserve-3d',
-          }}
+          style={{ transformStyle: 'preserve-3d' }}
         >
           {/* Anneau orbital extérieur */}
           <div
@@ -120,22 +167,23 @@ export const InteractiveMonogramJK: React.FC<InteractiveMonogramJKProps> = ({
             />
           </div>
 
-          {/* Monolithe central en verre avec monogramme JK */}
+          {/* Monolithe central avec monogramme JK */}
           <div
             className="glass-panel relative flex h-[62%] w-[62%] flex-col items-center justify-center rounded-3xl shadow-[var(--shadow-elevated)]"
             style={{ transform: 'translateZ(42px)' }}
           >
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-3xl opacity-40"
+              className="pointer-events-none absolute inset-0 rounded-3xl opacity-35"
               style={{
-                background: `radial-gradient(circle at ${tilt.gx}% ${tilt.gy}%, var(--accent-1), transparent 65%)`,
+                background:
+                  'radial-gradient(circle at 35% 30%, var(--accent-1), transparent 65%)',
               }}
             />
             <MonogramJK
               size={size === 'hero' ? 116 : 124}
               showFrame={false}
-              className="relative z-10 drop-shadow-[0_10px_28px_rgba(0,0,0,0.45)]"
+              className="relative z-10"
             />
             <span className="font-mono-tech relative z-10 mt-2 text-[9px] tracking-[0.34em] uppercase text-[var(--text-muted)]">
               JK // STUDIO
@@ -144,11 +192,12 @@ export const InteractiveMonogramJK: React.FC<InteractiveMonogramJKProps> = ({
 
           {/* Étiquettes techniques flottantes */}
           <span
+            ref={coordRef}
             aria-hidden="true"
-            className="font-mono-tech absolute top-4 right-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)]/85 px-2.5 py-1 text-[9px] tracking-[0.2em] text-[var(--accent-text)] backdrop-blur-md"
+            className="font-mono-tech absolute top-4 right-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] px-2.5 py-1 text-[9px] tracking-[0.2em] text-[var(--accent-text)]"
             style={{ transform: 'translateZ(64px)' }}
           >
-            X:{tilt.ry.toFixed(0).padStart(2, '0')} Y:{tilt.rx.toFixed(0).padStart(2, '0')}
+            X:00 Y:00
           </span>
         </div>
       </div>

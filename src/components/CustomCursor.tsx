@@ -3,9 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 export const CustomCursor: React.FC = () => {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
   const [enabled, setEnabled] = useState(false);
-  const [hoverLabel, setHoverLabel] = useState<string | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -19,15 +18,17 @@ export const CustomCursor: React.FC = () => {
     let rx = -100;
     let ry = -100;
     let rafId = 0;
+    let lastHover = false;
+    let lastLabel: string | null = null;
 
     const animate = () => {
       rafId = 0;
-      rx += (mx - rx) * 0.18;
-      ry += (my - ry) * 0.18;
+      rx += (mx - rx) * 0.22;
+      ry += (my - ry) * 0.22;
       if (ringRef.current) {
         ringRef.current.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
       }
-      if (Math.abs(mx - rx) > 0.25 || Math.abs(my - ry) > 0.25) {
+      if (Math.abs(mx - rx) > 0.3 || Math.abs(my - ry) > 0.3) {
         rafId = requestAnimationFrame(animate);
       }
     };
@@ -45,25 +46,35 @@ export const CustomCursor: React.FC = () => {
       startLoop();
     };
 
+    const applyHoverState = (hovering: boolean, label: string | null) => {
+      if (hovering === lastHover && label === lastLabel) return;
+      lastHover = hovering;
+      lastLabel = label;
+
+      if (dotRef.current) {
+        dotRef.current.style.opacity = label ? '0' : '1';
+      }
+      if (ringRef.current) {
+        ringRef.current.classList.toggle('is-hover', hovering);
+        ringRef.current.classList.toggle('has-label', Boolean(label));
+      }
+      if (labelRef.current) {
+        labelRef.current.textContent = label ?? '';
+      }
+    };
+
     const onOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
       const labeled = target.closest<HTMLElement>('[data-cursor]');
       if (labeled) {
-        setIsHovering(true);
-        setHoverLabel(labeled.getAttribute('data-cursor'));
+        applyHoverState(true, labeled.getAttribute('data-cursor'));
         return;
       }
       const interactive = target.closest<HTMLElement>(
         'a, button, [role="button"], input, textarea, select'
       );
-      if (interactive) {
-        setIsHovering(true);
-        setHoverLabel(null);
-      } else {
-        setIsHovering(false);
-        setHoverLabel(null);
-      }
+      applyHoverState(Boolean(interactive), null);
     };
 
     window.addEventListener('mousemove', onMove, { passive: true });
@@ -80,19 +91,9 @@ export const CustomCursor: React.FC = () => {
 
   return (
     <>
-      <div
-        ref={dotRef}
-        className={`custom-cursor-dot ${hoverLabel ? 'opacity-0' : 'opacity-100'}`}
-        aria-hidden="true"
-      />
-      <div
-        ref={ringRef}
-        className={`custom-cursor-ring ${isHovering ? 'is-hover' : ''} ${
-          hoverLabel ? 'has-label' : ''
-        }`}
-        aria-hidden="true"
-      >
-        {hoverLabel && <span>{hoverLabel}</span>}
+      <div ref={dotRef} className="custom-cursor-dot" aria-hidden="true" />
+      <div ref={ringRef} className="custom-cursor-ring" aria-hidden="true">
+        <span ref={labelRef} />
       </div>
     </>
   );

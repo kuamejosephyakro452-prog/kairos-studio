@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUpRight, Play } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
 import { HERO_MEDIA } from '@/content/media';
 import { resolveAssetUrl } from '@/lib/media';
+import { scrollToElement } from '@/lib/scrollControl';
 import type { Locale } from '@/types/portfolio';
 import { InteractiveMonogramJK } from './InteractiveMonogramJK';
 import { Magnetic } from './Magnetic';
@@ -22,11 +23,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
   const [mountDesktopWebGL, setMountDesktopWebGL] = useState(false);
   const [loadHeroVideo, setLoadHeroVideo] = useState(false);
 
-  // Charge WebGL (desktop uniquement) et la boucle vidéo capsule après le premier rendu
+  // Charge WebGL sur desktop performant après le premier rendu (la vidéo capsule 1 Mo ne se charge qu'au survol pour garder le chargement initial < 150 Ko)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isDesktop = window.innerWidth >= 768;
+    const isDesktop = window.innerWidth >= 1024;
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    if (reduced || !isDesktop || nav.connection?.saveData) return;
 
     const win = window as Window & {
       requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
@@ -35,14 +38,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
 
     let idleId = 0;
     const startDeferred = () => {
-      if (!reduced && isDesktop) setMountDesktopWebGL(true);
-      if (!reduced) setLoadHeroVideo(true);
+      setMountDesktopWebGL(true);
     };
 
     if (win.requestIdleCallback) {
-      idleId = win.requestIdleCallback(startDeferred, { timeout: 1400 });
+      idleId = win.requestIdleCallback(startDeferred, { timeout: 1800 });
     } else {
-      idleId = window.setTimeout(startDeferred, 900);
+      idleId = window.setTimeout(startDeferred, 1400);
     }
 
     return () => {
@@ -73,7 +75,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
   }, [loadHeroVideo]);
 
   const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = document.getElementById(id);
+    if (el) scrollToElement(el, { immediate: false });
   };
 
   let wordSeq = 0;
@@ -128,7 +131,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
         {/* Colonne gauche : promesse client massive + CTA */}
         <div className="lg:col-span-7">
           <div
-            className="hero-stagger hero-stagger-anim mb-6 inline-flex items-center gap-3 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)]/70 px-4 py-1.5 backdrop-blur-md"
+            className="hero-stagger hero-stagger-anim mb-6 inline-flex items-center gap-3 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)]/92 px-4 py-1.5"
             style={{ '--i': 0 } as React.CSSProperties}
           >
             <span
@@ -181,7 +184,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
                 type="button"
                 onClick={() => scrollTo('works')}
                 data-cursor={locale === 'fr' ? 'VOIR' : 'VIEW'}
-                className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)]/65 px-7 py-4 font-mono-tech text-xs font-semibold tracking-[0.18em] uppercase text-[var(--text-primary)] backdrop-blur-md transition-colors hover:border-[var(--accent-1)] hover:text-[var(--accent-text)]"
+                className="inline-flex cursor-pointer items-center gap-3 rounded-full border border-[var(--border-strong)] bg-[var(--bg-card)]/92 px-7 py-4 font-mono-tech text-xs font-semibold tracking-[0.18em] uppercase text-[var(--text-primary)] transition-colors hover:border-[var(--accent-1)] hover:text-[var(--accent-text)]"
               >
                 {t.hero.ctaSecondary}
               </button>
@@ -196,10 +199,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ locale }) => {
         >
           <InteractiveMonogramJK size="hero" caption={t.hero.monogramCaption} />
 
-          {/* Capsule showreel muet flottante : affiche le poster WebP immédiatement puis charge la boucle vidéo en différé */}
+          {/* Capsule showreel : poster WebP ultra-léger (12 Ko) au chargement, vidéo chargée uniquement au survol desktop */}
           <button
             type="button"
             onClick={() => scrollTo('works')}
+            onMouseEnter={() => {
+              if (
+                window.innerWidth >= 1024 &&
+                !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+              ) {
+                setLoadHeroVideo(true);
+              }
+            }}
             data-cursor={locale === 'fr' ? 'LIRE' : 'PLAY'}
             className="glass-panel group relative flex w-full max-w-sm cursor-pointer items-center gap-4 overflow-hidden rounded-2xl p-2.5 text-left transition-transform duration-300 hover:-translate-y-1 hover:border-[var(--accent-1)]"
           >

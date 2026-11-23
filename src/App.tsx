@@ -82,7 +82,6 @@ const PublicLayout: React.FC<{
 
   return (
     <SmoothScrollProvider>
-      <div className="film-grain" aria-hidden="true" />
       {enableDesktopCursor && (
         <Suspense fallback={null}>
           <CustomCursor />

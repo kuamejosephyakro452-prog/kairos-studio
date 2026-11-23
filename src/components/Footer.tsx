@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUp, ArrowUpRight, Mail, MessageCircle } from 'lucide-react';
 import { DICTIONARY } from '@/i18n/translations';
+import { scrollToY } from '@/lib/scrollControl';
 import type { Locale } from '@/types/portfolio';
 import { MonogramJK } from './MonogramJK';
 import { Magnetic } from './Magnetic';
@@ -20,7 +21,7 @@ export const Footer: React.FC<{ locale: Locale }> = ({ locale }) => {
   const privacyPath = locale === 'fr' ? '/fr/confidentialite' : '/en/privacy';
 
   return (
-    <footer className="relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)]">
+    <footer className="cv-auto relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)]">
       <div className="bg-mesh-ambient pointer-events-none absolute inset-0 opacity-50" />
 
       <div className="relative z-10 mx-auto max-w-[1440px] px-5 pt-20 pb-24 sm:px-8 sm:pb-16 lg:px-12">
@@ -174,7 +175,7 @@ export const Footer: React.FC<{ locale: Locale }> = ({ locale }) => {
             </Link>
             <button
               type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={() => scrollToY(0, { immediate: false })}
               className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--border-subtle)] px-3.5 py-1.5 uppercase tracking-[0.16em] text-[var(--text-primary)] hover:border-[var(--accent-1)]"
             >
               <ArrowUp className="h-3 w-3 text-[var(--accent-1)]" />

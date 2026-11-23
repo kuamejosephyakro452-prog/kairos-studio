@@ -10,7 +10,7 @@ export const KineticMarquee: React.FC<{ locale: Locale }> = ({ locale }) => {
   return (
     <section
       aria-label="KAIROS STUDIO"
-      className="overflow-hidden border-y border-[var(--border-subtle)] bg-[var(--bg-elevated)] py-10 text-[var(--text-primary)] sm:py-14"
+      className="cv-auto overflow-hidden border-y border-[var(--border-subtle)] bg-[var(--bg-elevated)] py-10 text-[var(--text-primary)] sm:py-14"
     >
       <div className="marquee-left items-center gap-10">
         {r1.map((item, idx) => (

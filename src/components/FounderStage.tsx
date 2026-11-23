@@ -11,7 +11,7 @@ export const FounderStage: React.FC<{ locale: Locale }> = ({ locale }) => {
   return (
     <section
       id="founder"
-      className="relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-primary)] py-24 text-[var(--text-primary)] sm:py-36"
+      className="cv-auto relative overflow-hidden border-t border-[var(--border-subtle)] bg-[var(--bg-primary)] py-24 text-[var(--text-primary)] sm:py-36"
     >
       <div className="bg-mesh-ambient pointer-events-none absolute inset-0 opacity-45" />
 
@@ -19,7 +19,7 @@ export const FounderStage: React.FC<{ locale: Locale }> = ({ locale }) => {
         {/* Bloc Fondateur : Joseph Kouamé + Monogramme JK sculptural */}
         <div className="grid gap-14 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-5">
-            <div className="flex flex-col items-center rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-card)]/75 px-6 py-10 backdrop-blur-xl sm:p-12">
+            <div className="flex flex-col items-center rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-card)]/95 px-6 py-10 sm:p-12">
               <InteractiveMonogramJK size="founder" />
               <div className="mt-6 text-center">
                 <p className="font-display text-3xl font-bold">{t.founder.name}</p>

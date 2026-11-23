@@ -88,7 +88,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ locale }) => {
   return (
     <section
       id="contact"
-      className="relative overflow-hidden bg-[var(--bg-primary)] py-24 text-[var(--text-primary)] sm:py-36"
+      className="cv-auto relative overflow-hidden bg-[var(--bg-primary)] py-24 text-[var(--text-primary)] sm:py-36"
     >
       <div className="bg-mesh-ambient pointer-events-none absolute inset-0 opacity-60" />
 
